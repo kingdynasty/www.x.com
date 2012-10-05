@@ -1,0 +1,52 @@
+[ 2012-10-05T12:53:30+08:00 ] ERR: (ThinkException) 无法加载控制器:Index
+[ 2012-10-05T14:18:34+08:00 ] ERR: (ThinkException) 无法加载控制器:Index
+[ 2012-10-05T19:59:19+08:00 ] ERR: (ThinkException) 无法加载控制器:Index
+[ 2012-10-05T23:19:15+08:00 ] ERR: (ThinkException) 非法操作:init
+[ 2012-10-05T23:19:15+08:00 ] 127.0.0.1 /index.php?m=Admin&c=Index&a=init
+INFO: [ app_begin ] --START--
+INFO: Run ReadHtmlCache Behavior [ RunTime:0.000857s ]
+INFO: [ app_begin ] --END-- [ RunTime:0.000940s ]
+NOTIC: [8] Undefined index:  class D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  type D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  file D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 62 行.
+NOTIC: [8] Undefined index:  line D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 62 行.
+NOTIC: [4096] Object of class IndexAction could not be converted to string D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 64 行.
+NOTIC: [8] Array to string conversion D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 64 行.
+NOTIC: [8] Undefined index:  class D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  type D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  class D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  type D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+
+[ 2012-10-05T23:54:41+08:00 ] ERR: (ThinkException) 非法操作:init
+[ 2012-10-05T23:54:41+08:00 ] 127.0.0.1 /index.php?m=Admin&c=Index&a=init
+INFO: [ app_begin ] --START--
+INFO: Run ReadHtmlCache Behavior [ RunTime:0.001015s ]
+INFO: [ app_begin ] --END-- [ RunTime:0.001109s ]
+NOTIC: [8] Undefined index:  class D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  type D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  file D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 62 行.
+NOTIC: [8] Undefined index:  line D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 62 行.
+NOTIC: [4096] Object of class IndexAction could not be converted to string D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 64 行.
+NOTIC: [8] Array to string conversion D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 64 行.
+NOTIC: [8] Undefined index:  class D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  type D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  class D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+NOTIC: [8] Undefined index:  type D:\Intpub\wwwroot\www.x.com\ThinkPHP\Lib\Core\ThinkException.class.php 第 63 行.
+
+[ 2012-10-05T23:56:19+08:00 ] 127.0.0.1 /index.php?m=Admin&c=Index&a=init
+INFO: [ app_begin ] --START--
+INFO: Run ReadHtmlCache Behavior [ RunTime:0.000562s ]
+INFO: [ app_begin ] --END-- [ RunTime:0.000648s ]
+INFO: [ view_parse ] --START--
+INFO: Run ParseTemplate Behavior [ RunTime:-0.000998s ]
+INFO: [ view_parse ] --END-- [ RunTime:0.015847s ]
+INFO: [ view_filter ] --START--
+INFO: Run ContentReplace Behavior [ RunTime:-0.016898s ]
+INFO: Run TokenBuild Behavior [ RunTime:-0.017691s ]
+INFO: Run WriteHtmlCache Behavior [ RunTime:-0.018398s ]
+INFO: Run ShowRuntime Behavior [ RunTime:-0.019126s ]
+INFO: [ view_filter ] --END-- [ RunTime:0.003158s ]
+INFO: [ view_end ] --START--
+INFO: Run ShowPageTrace Behavior [ RunTime:-0.020095s ]
+INFO: [ view_end ] --END-- [ RunTime:0.000987s ]
+
