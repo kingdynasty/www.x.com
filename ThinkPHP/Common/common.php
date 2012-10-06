@@ -145,11 +145,10 @@ function import($class, $baseUrl = '', $ext='.class.php') {
     else
         $_file[$class . $baseUrl] = true;
     $class_strut     = explode('/', $class);
-   
     if (empty($baseUrl)) {
         if ('@' == $class_strut[0] || APP_NAME == $class_strut[0]) {
             //加载当前项目应用类库
-             $baseUrl =count($class_strut) == 3 ? APP_PATH : APP_PATH.'Modules/';//TODO 修改后的
+             $baseUrl =count($class_strut) == 3 ? APP_PATH.'Lib/' : APP_PATH.'Modules/';//TODO 修改后的
              //用LIB_PATH替换'@/'
             //$class   = substr_replace($class, basename(LIB_PATH).'/', 0, strlen($class_strut[0]) + 1);
              $class = substr_replace($class, '', 0, strlen($class_strut[0]) + 1);//TODO 不带Lib的类库时
