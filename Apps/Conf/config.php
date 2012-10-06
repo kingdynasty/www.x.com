@@ -35,11 +35,11 @@ return  array(
     /* 数据库设置 */
     'DB_TYPE'               => 'mysql',     // 数据库类型
     'DB_HOST'               => 'localhost', // 服务器地址
-    'DB_NAME'               => '',          // 数据库名
+    'DB_NAME'               => 'www_c_com',          // 数据库名
     'DB_USER'               => 'root',      // 用户名
-    'DB_PWD'                => '',          // 密码
+    'DB_PWD'                => '123456',          // 密码
     'DB_PORT'               => '',        // 端口
-    'DB_PREFIX'             => 'think_',    // 数据库表前缀
+    'DB_PREFIX'             => 'v9_',    // 数据库表前缀
     'DB_FIELDTYPE_CHECK'    => false,       // 是否进行字段类型检查
     'DB_FIELDS_CACHE'       => true,        // 启用字段缓存
     'DB_CHARSET'            => 'utf8',      // 数据库编码默认采用utf8
@@ -78,7 +78,7 @@ return  array(
 
     /* SESSION设置 */
     'SESSION_AUTO_START'    => true,    // 是否自动开启Session
-    'SESSION_OPTIONS'       => array('type'=>'mysql','expire'=>1800,'path'=>CACHE_PATH.'Sessions/'), // session 配置数组 支持type name id path expire domian 等参数
+    'SESSION_OPTIONS'       => array('type'=>'Db','expire'=>1800,'path'=>CACHE_PATH.'Sessions/'), // session 配置数组 支持type name id path expire domian 等参数
     'SESSION_TYPE'          => '', // session hander类型 默认无需设置 除非扩展了session hander驱动
     'SESSION_PREFIX'        => '', // session 前缀
     //'VAR_SESSION_ID'      => 'session_id',     //sessionID的提交变量
