@@ -1,0 +1,1 @@
+<?php defined('APP_NAME') or exit('No permission resources.');?>
