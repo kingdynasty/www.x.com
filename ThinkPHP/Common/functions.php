@@ -314,12 +314,13 @@ function redirect($url, $time=0, $msg='') {
  * @param mixed $expire 缓存有效期（秒）
  * @return mixed
  */
-function cache($name,$value='',$expire=0) {
+function cache($name,$value='',$options=0) {
     static $cache   =   '';
-    if(is_array($expire)){
+    if(is_array($options)){
         // 缓存操作的同时初始化
-        $type       =   isset($expire['type'])?$expire['type']:'';
-        $cache      =   Cache::getInstance($type,$expire);
+        $type       =   isset($options['type'])?$options['type']:'';
+        $path		=	isset($options['path'])?$options['path']:'';
+        $cache      =   Cache::getInstance($type,$options);
     }elseif(is_array($name)) { // 缓存初始化
         $type       =   isset($name['type'])?$name['type']:'';
         $cache      =   Cache::getInstance($type,$name);
@@ -333,8 +334,8 @@ function cache($name,$value='',$expire=0) {
     }elseif(is_null($value)) { // 删除缓存
         return $cache->rm($name);
     }else { // 缓存数据
-        $expire     =   is_numeric($expire)?$expire:NULL;
-        return $cache->set($name, $value, $expire);
+        $options     =   is_numeric($options)?$options:NULL;
+        return $cache->set($name, $value, $options);
     }
 }
 
