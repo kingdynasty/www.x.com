@@ -1,14 +1,4 @@
 <?php
-// +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
-// +----------------------------------------------------------------------
-// | Copyright (c) 2006-2012 http://thinkphp.cn All rights reserved.
-// +----------------------------------------------------------------------
-// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
-// +----------------------------------------------------------------------
-// | Author: liu21st <liu21st@gmail.com>
-// +----------------------------------------------------------------------
-
 defined('THINK_PATH') or exit();
 /**
  * 文件类型缓存类
@@ -18,7 +8,6 @@ defined('THINK_PATH') or exit();
  * @author    liu21st <liu21st@gmail.com>
  */
 class CacheFile extends Cache {
-
     /**
      * 架构函数
      * @access public
@@ -27,12 +16,13 @@ class CacheFile extends Cache {
         if(!empty($options)) {
             $this->options =  $options;
         }
-        $this->options['temp']      =   !empty($options['temp'])?   $options['temp']    :   C('data_cache_path');
+        $this->options['cache']      =   !empty($options['cache'])?   $options['cache']    :   C('data_cache_path');
         $this->options['prefix']    =   isset($options['prefix'])?  $options['prefix']  :   C('data_cache_prefix');
         $this->options['expire']    =   isset($options['expire'])?  $options['expire']  :   C('data_cache_time');
+        $this->options['datatype']    =   isset($options['datatype'])?  $options['datatype']  :   C('data_cache_datatype');
         $this->options['length']    =   isset($options['length'])?  $options['length']  :   0;
-        if(substr($this->options['temp'], -1) != '/')    $this->options['temp'] .= '/';
-        $this->connected = is_dir($this->options['temp']) && is_writeable($this->options['temp']);
+        if(substr($this->options['cache'], -1) != '/')    $this->options['cache'] .= '/';
+        $this->connected = is_dir($this->options['cache']) && is_writeable($this->options['cache']);
         $this->init();
     }
 
@@ -42,15 +32,14 @@ class CacheFile extends Cache {
      * @return boolen
      */
     private function init() {
-        $stat = stat($this->options['temp']);
+        $stat = stat($this->options['cache']);
         $dir_perms = $stat['mode'] & 0007777; // Get the permission bits.
         $file_perms = $dir_perms & 0000666; // Remove execute bits for files.
-
         // 创建项目缓存目录
-        if (!is_dir($this->options['temp'])) {
-            if (!  mkdir($this->options['temp']))
-                return false;
-             chmod($this->options['temp'], $dir_perms);
+        if (!is_dir($this->options['cache'])) {
+            if (!  mkdir($this->options['cache']))
+                return false;            
+             chmod($this->options['cache'], $dir_perms);
         }
     }
 
@@ -69,22 +58,9 @@ class CacheFile extends Cache {
      * @param string $name 缓存变量名
      * @return string
      */
-    private function filename($name) {
-        $name	=	md5($name);
-        if(C('data_cache_subdir')) {
-            // 使用子目录
-            $dir   ='';
-            for($i=0;$i<C('data_path_level');$i++) {
-                $dir	.=	$name{$i}.'/';
-            }
-            if(!is_dir($this->options['temp'].$dir)) {
-                mkdir($this->options['temp'].$dir,0755,true);
-            }
-            $filename	=	$dir.$this->options['prefix'].$name.'.php';
-        }else{
-            $filename	=	$this->options['prefix'].$name.'.php';
-        }
-        return $this->options['temp'].$filename;
+    private function filename($name,$module=MODULE_NAME) {
+    	if(empty($module) || is_null($module)) $module = ucfirst(MODULE_NAME);
+        return $this->options['cache'].$module.'/'.$name.'.php';
     }
 
     /**
@@ -93,15 +69,15 @@ class CacheFile extends Cache {
      * @param string $name 缓存变量名
      * @return mixed
      */
-    public function get($name) {
-        $filename   =   $this->filename($name);
+    public function get($name,$module) {
+        $filename   =   $this->filename($name,$module);
         if (!$this->isConnected() || !is_file($filename)) {
            return false;
         }
         N('cache_read',1);
         $content    =   file_get_contents($filename);
         if( false !== $content) {
-            $expire  =  (int)substr($content,8, 12);
+            $expire  =  (int)substr($content,8, 12);//从第一个“0”开始算起000000000000
             if($expire != 0 && time() > filemtime($filename) + $expire) {
                 //缓存过期删除缓存文件
                 unlink($filename);
@@ -120,7 +96,11 @@ class CacheFile extends Cache {
                 //启用数据压缩
                 $content   =   gzuncompress($content);
             }
-            $content    =   unserialize($content);
+            if($this->options['datatype'] == 'array') {
+		    	$content = @require($filename);
+		    } elseif($this->_setting['type'] == 'serialize') {
+            	$content = unserialize($content);
+            }
             return $content;
         }
         else {
@@ -136,24 +116,46 @@ class CacheFile extends Cache {
      * @param int $expire  有效时间 0为永久
      * @return boolen
      */
-    public function set($name,$value,$expire=null) {
+    public function set($name,$value,$expire=null,$module) {
         N('cache_write',1);
         if(is_null($expire)) {
             $expire =  $this->options['expire'];
         }
-        $filename   =   $this->filename($name);
-        $data   =   serialize($value);
-        if( C('data_cache_compress') && function_exists('gzcompress')) {
-            //数据压缩
-            $data   =   gzcompress($data,3);
+        //确定文件名
+        $filename   =   $this->filename($name,$module);    
+        //将值赋值给$data
+        if ($this->options['datatype'] == 'array') {
+        	$data    = "<?php\n//".sprintf('%012d',$expire)."\nreturn ".var_export($value, true).";";
         }
-        if(C('data_cache_check')) {//开启数据校验
-            $check  =  md5($data);
-        }else {
-            $check  =  '';
+        elseif ($this->options['datatype'] == 'serialize'){
+	        $data   =   serialize($value);
+	        if( C('data_cache_compress') && function_exists('gzcompress')) {
+	            //数据压缩
+	            $data   =   gzcompress($data,3);
+	        }
+	        if(C('data_cache_check')) {//开启数据校验
+	            $check  =  md5($data);
+	        }else {
+	            $check  =  '';
+	        }
+	        $data    = "<?php\n//".sprintf('%012d',$expire).$check.$data."\n?>";
         }
-        $data    = "<?php\n//".sprintf('%012d',$expire).$check.$data."\n?>";
-        $result  =   file_put_contents($filename,$data);
+        //将缓存数据存入数据库
+        if ($module == 'Commons' || ($module == 'Commons' && substr($name, 0, 11) != 'cat_content')) {
+        	$db = M('Cache');
+        	$datas = new_addslashes($data);
+        	if ($db->where(array('filename'=>$filename))->find()) {
+        		$db->where(array('filename'=>$filename))->data(array('data'=>$datas))->save();
+        	} else {
+        		$db->data(array('filename'=>$filename,'data'=>$datas))->add();
+        	}
+        }        
+        //是否开启互斥锁
+        if(C('lock_ex'))  {
+        	$result = file_put_contents($filename, $data, LOCK_EX);
+        } else {
+        	$result  =   file_put_contents($filename,$data);
+        }        
         if($result) {
             if($this->options['length']>0) {
                 // 记录缓存队列
@@ -172,8 +174,17 @@ class CacheFile extends Cache {
      * @param string $name 缓存变量名
      * @return boolen
      */
-    public function rm($name) {
-        return unlink($this->filename($name));
+    public function rm($name,$module) {
+    	$filename = $this->filename($name,$module);
+    	if(file_exists($filename)) {
+    		if ($module == 'Commons' && substr($name, 0, 11) != 'cat_content') {
+    			$db = M('Cache');
+    			$db->where(array('filename'=>$filename))->delete();
+    		}
+    		return unlink($filename) ? true : false;
+    	} else {
+    		return false;
+    	}
     }
 
     /**
@@ -183,7 +194,7 @@ class CacheFile extends Cache {
      * @return boolen
      */
     public function clear() {
-        $path   =  $this->options['temp'];
+        $path   =  $this->options['cache'];
         if ( $dir = opendir( $path ) ) {
             while ( $file = readdir( $dir ) ) {
                 $check = is_dir( $file );
