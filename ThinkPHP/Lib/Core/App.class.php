@@ -87,9 +87,9 @@ class App {
         }
 
         /* 获取模板主题名称 */
-        $templateSet =  C('default_theme');
-        if(C('tmpl_detect_theme')) {// 自动侦测模板主题
-            $t = C('var_template');
+        $templateSet =  C('DEFAULT_THEME');
+        if(C('TMPL_DETECT_THEME')) {// 自动侦测模板主题
+            $t = C('VAR_TEMPLATE');
             if (isset($_GET[$t])){
                 $templateSet = $_GET[$t];
             }elseif(cookie('think_template')){
@@ -97,18 +97,18 @@ class App {
             }
             // 主题不存在时仍改回使用默认主题
             if(!is_dir(TMPL_PATH.$templateSet))
-                $templateSet = C('default_theme');
+                $templateSet = C('DEFAULT_THEME');
             cookie('think_template',$templateSet);
         }
         /* 模板相关目录常量 */
         define('THEME_NAME',   $templateSet);                  // 当前模板主题名称
-        $module   =  defined('MODULE_NAME')?MODULE_NAME.'/':'';
-        define('THEME_PATH',   TMPL_PATH.$module.(THEME_NAME?THEME_NAME.'/':''));
+        $module   =  defined('MODULE_NAME') ? MODULE_NAME.'/':'';
+        define('THEME_PATH',   TMPL_PATH.(THEME_NAME?THEME_NAME.'/':'')).$module;
         define('APP_TMPL_PATH',__ROOT__.'/'.APP_NAME.(APP_NAME?'/':'').basename(TMPL_PATH).'/'.$module.(THEME_NAME?THEME_NAME.'/':''));
-        C('TEMPLATE_NAME',THEME_PATH.CONTROLER_NAME.(defined('MODULE_NAME')?C('tmpl_file_depr'):'/').ACTION_NAME.C('tmpl_template_suffix'));
+        C('TEMPLATE_NAME',THEME_PATH.CONTROLER_NAME.(defined('MODULE_NAME')?C('TMPL_FILE_DEPR'):'/').ACTION_NAME.C('TMPL_TEMPLATE_SUFFIX'));
         C('CACHE_PATH',CACHE_PATH.$module);
         //动态配置 TMPL_EXCEPTION_FILE,改为绝对地址
-        C('TMPL_EXCEPTION_FILE',realpath(C('tmpl_exception_file')));
+        C('TMPL_EXCEPTION_FILE',realpath(C('TMPL_EXCEPTION_FILE')));
         return ;
     }
 
@@ -246,7 +246,7 @@ class App {
             header('Content-Type:text/html; charset=utf-8');
             exit('目录 [ '.RUNTIME_PATH.' ] 不可写！');
         }
-        mkdir(CACHE_PATH);  // 模板缓存目录
+        if(!is_dir(CACHE_PATH)) mkdir(CACHE_PATH);  // 模板缓存目录
         if(!is_dir(MODULE_LOG_PATH))	mkdir(MODULE_LOG_PATH);    // 日志目录
         if(!is_dir(MODULE_TEMP_PATH))  mkdir(MODULE_TEMP_PATH);	// 数据缓存目录
         if(!is_dir(MODULE_DATA_PATH))	mkdir(MODULE_DATA_PATH);	// 数据文件目录
