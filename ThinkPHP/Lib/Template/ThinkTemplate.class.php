@@ -322,7 +322,7 @@ class  ThinkTemplate {
         $begin = $this->config['taglib_begin'];
         $end   = $this->config['taglib_end'];
         $className = 'TagLib'.ucwords($tagLib);
-        if(!import($className)) {
+        if(!import($className,'',0)) {
             if(is_file(EXTEND_PATH.'Driver/TagLib/'.$className.'.class.php')) {
                 // 扩展标签库优先识别
                 $file   = EXTEND_PATH.'Driver/TagLib/'.$className.'.class.php';
