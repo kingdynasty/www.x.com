@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-$show_validator = true;include $this->admin_tpl('header');?>
+$show_validator = true;include Admin::adminTpl('header');?>
 <script type="text/javascript">
   $(document).ready(function() {
 	$.formValidator.initConfig({autotip:true,formid:"myform",onerror:function(msg){}});
@@ -11,7 +11,7 @@ $show_validator = true;include $this->admin_tpl('header');?>
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=admin_manage&a=edit" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=AdminManage&a=edit" method="post" id="myform">
 <input type="hidden" name="info[userid]" value="<?php echo $userid?>"></input>
 <input type="hidden" name="info[username]" value="<?php echo $username?>"></input>
 <table width="100%" class="table_form contentWrap">

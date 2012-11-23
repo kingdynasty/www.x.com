@@ -26,6 +26,7 @@ class Think {
      * @return void
      */
     static public function start() {
+                
         // 设定错误和异常处理
         register_shutdown_function(array('Think','fatalError'));
         set_error_handler(array('Think','appError'));
@@ -36,6 +37,7 @@ class Think {
         Think::buildApp();         // 预编译项目
         //[/RUNTIME]
         // 运行应用
+        
         App::run();
         return ;
     }
@@ -47,27 +49,28 @@ class Think {
      * @return string
      */
     static private function buildApp() {
-        // 加载底层惯例配置文件
-        C(include THINK_PATH.'Conf/convention.php');
-
+            
         // 读取运行模式
-        if(defined('MODE_NAME')) { // 模式的设置并入核心模式
+        if(defined('MODE_NAME')) { // 读取模式的设置
             $mode   = include MODE_PATH.strtolower(MODE_NAME).'.php';
         }else{
             $mode   =  array();
         }
 
-        // 加载模式配置文件
-        if(isset($mode['config'])) {
+        if(isset($mode['config'])) {// 加载模式配置文件
             C( is_array($mode['config'])?$mode['config']:include $mode['config'] );
+        }else{ // 加载底层惯例配置文件                
+            C(include THINK_PATH.'Conf/convention.php');
         }
-
+        
         // 加载项目配置文件
         if(is_file(CONF_PATH.'config.php'))
             C(include CONF_PATH.'config.php');
 
         // 加载框架底层语言包
-        L(include THINK_PATH.'Lang/'.strtolower(C('default_lang')).'.php');
+        $LANG = array();
+        include THINK_PATH.'Lang/'.strtolower(C('DEFAULT_LANG')).'.lang.php';
+        L($LANG);
 
         // 加载模式系统行为定义
         if(C('app_tags_on')) {
@@ -118,12 +121,14 @@ class Think {
             if(!APP_DEBUG)  $compile   .= compile(COMMON_PATH.'common.php');
         }
 
-        // 加载模式别名定义
+       // 加载模式别名定义
         if(isset($mode['alias'])) {
             $alias = is_array($mode['alias'])?$mode['alias']:include $mode['alias'];
-            alias_import($alias);
-            if(!APP_DEBUG) $compile .= 'alias_import('.var_export($alias,true).');';
+        }else{
+            $alias = include THINK_PATH.'Conf/alias.php';
         }
+        alias_import($alias);
+        if(!APP_DEBUG) $compile .= 'alias_import('.var_export($alias,true).');';        
         // 加载项目别名定义
         if(is_file(CONF_PATH.'alias.php')){ 
             $alias = include CONF_PATH.'alias.php';
@@ -157,32 +162,56 @@ class Think {
     public static function autoload($class) {
         // 检查是否存在别名定义
         if(alias_import($class)) return ;
-
+        $file       =   $class.'.class.php';
         if(substr($class,-8)=='Behavior') { // 加载行为
-            if(require_cache(CORE_PATH.'Behavior/'.$class.'.class.php') 
-                || require_cache(EXTEND_PATH.'Behavior/'.$class.'.class.php') 
-                || require_cache(LIB_PATH.'Behavior/'.$class.'.class.php')
-                || (defined('MODE_NAME') && require_cache(MODE_PATH.ucwords(MODE_NAME).'/Behavior/'.$class.'.class.php'))) {
+            if(require_cache(CORE_PATH.'Behavior/'.$file) 
+                || require_cache(EXTEND_PATH.'Behavior/'.$file) 
+                || require_cache(LIB_PATH.'Behavior/'.$file)
+                || (defined('MODE_NAME') && require_cache(MODE_PATH.ucwords(MODE_NAME).'/Behavior/'.$file))) {
                 return ;
             }
         }elseif(substr($class,-5)=='Model'){ // 加载模型
-            if((defined('MODULE_NAME') && require_cache(LIB_PATH.'Model/'.MODULE_NAME.'/'.$class.'.class.php'))
-                || require_cache(LIB_PATH.'Model/'.$class.'.class.php')
-                || require_cache(EXTEND_PATH.'Model/'.$class.'.class.php') ) {
+            if((defined('MODULE_NAME') && require_cache(LIB_PATH.'Model/'.MODULE_NAME.'/'.$file))
+                || require_cache(LIB_PATH.'Model/'.$file)
+                || require_cache(EXTEND_PATH.'Model/'.$file) ) {
                 return ;
             }
         }elseif(substr($class,-6)=='Action'){ // 加载控制器
-            if((defined('MODULE_NAME') && require_cache(LIB_PATH.'Action/'.MODULE_NAME.'/'.$class.'.class.php'))
-                || require_cache(LIB_PATH.'Action/'.$class.'.class.php')
-                || require_cache(EXTEND_PATH.'Action/'.$class.'.class.php') ) {
+            if((defined('MODULE_NAME') && require_cache(LIB_PATH.'Action/'.MODULE_NAME.'/'.$file))
+                || require_cache(LIB_PATH.'Action/'.$file)
+                || require_cache(EXTEND_PATH.'Action/'.$file) ) {
                 return ;
             }
-        }
+        }elseif(substr($class,0,5)=='Cache'){ // 加载缓存驱动
+            if(require_array(array(
+                    EXTEND_PATH.'Driver/Cache/'.$file,
+                    CORE_PATH.'Driver/Cache/'.$file),true)){
+                return ;
+            }
+        }elseif(substr($class,0,2)=='Db'){ // 加载数据库驱动
+            if(require_array(array(
+                    EXTEND_PATH.'Driver/Db/'.$file,
+                    CORE_PATH.'Driver/Db/'.$file),true)){
+                return ;
+            }
+        }elseif(substr($class,0,8)=='Template'){ // 加载模板引擎驱动
+            if(require_array(array(
+                    EXTEND_PATH.'Driver/Template/'.$file,
+                    CORE_PATH.'Driver/Template/'.$file),true)){
+                return ;
+            }
+        }elseif(substr($class,0,6)=='TagLib'){ // 加载标签库驱动
+            if(require_array(array(
+                    EXTEND_PATH.'Driver/TagLib/'.$file,
+                    CORE_PATH.'Driver/TagLib/'.$file),true)) {
+                return ;
+            }
+        }        
 
         // 根据自动加载路径设置进行尝试搜索
         $paths  =   explode(',',C('app_autoload_path'));
         foreach ($paths as $path){
-            if(import($path.'.'.$class))
+            if(import($path.'.'.$class,'',0))
                 // 如果加载类成功则返回
                 return ;
         }

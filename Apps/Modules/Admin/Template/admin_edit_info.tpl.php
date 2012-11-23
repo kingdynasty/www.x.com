@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-$show_validator = true;include $this->admin_tpl('header');?>
+$show_validator = true;include Admin::adminTpl('header');?>
 <script type="text/javascript">
   $(document).ready(function() {
 	$.formValidator.initConfig({autotip:true,formid:"myform",onerror:function(msg){}});
@@ -8,7 +8,7 @@ $show_validator = true;include $this->admin_tpl('header');?>
 	$("#email").formValidator({onshow:"<?php echo L('input').L('email')?>",onfocus:"<?php echo L('input').L('email')?>",oncorrect:"<?php echo L('email').L('format_right')?>"}).regexValidator({regexp:"email",datatype:"enum",onerror:"<?php echo L('email').L('format_incorrect')?>"}).ajaxValidator({
 	    type : "get",
 		url : "",
-		data :"m=admin&c=admin_manage&a=public_email_ajx",
+		data :"m=Admin&c=AdminManage&a=publicEmailAjx",
 		datatype : "html",
 		async:'false',
 		success : function(data){	
@@ -29,7 +29,7 @@ $show_validator = true;include $this->admin_tpl('header');?>
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=admin_manage&a=public_edit_info" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=AdminManage&a=publicEditInfo" method="post" id="myform">
 <input type="hidden" name="info[userid]" value="<?php echo $userid?>"></input>
 <input type="hidden" name="info[username]" value="<?php echo $username?>"></input>
 <table width="100%" class="table_form contentWrap">

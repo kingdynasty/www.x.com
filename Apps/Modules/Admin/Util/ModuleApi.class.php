@@ -9,14 +9,14 @@
 
 defined('APP_NAME') or exit('No permission resources.');
 
-pc_base::load_sys_func('dir');
-class module_api {
+load('dir');
+class ModuleApi {
 	
-	private $db, $m_db, $installdir, $uninstaldir, $module, $isall;
+	private $db, $mDB, $installdir, $uninstaldir, $module, $isall;
 	public $error_msg = '';
 	
 	public function __construct() {
-		$this->db = pc_base::load_model('module_model');
+		$this->db = M('Module');
 	}
 	
 	/**
@@ -26,7 +26,7 @@ class module_api {
 	public function install($module = '') {
 		define('INSTALL', true);
 		if ($module) $this->module = $module;
-		$this->installdir = PC_PATH.'modules'.DIRECTORY_SEPARATOR.$this->module.DIRECTORY_SEPARATOR.'install'.DIRECTORY_SEPARATOR;
+		$this->installdir = APP_PATH.'Modules/'.$this->module.'/Install/';
 		
 		$this->check();
 		$models = @require($this->installdir.'model.php');
@@ -38,16 +38,16 @@ class module_api {
 		}
 		if (is_array($models) && !empty($models)) {
 			foreach ($models as $m) {
-				$this->m_db = pc_base::load_model($m.'_model');
+				$this->mDb = M($m);
 				$sql = file_get_contents($this->installdir.$m.'.sql');
-				$this->sql_execute($sql);
+				$this->sqlExecute($sql);
 			}
 		}
 		if (file_exists($this->installdir.'extention.inc.php')) {
-			$menu_db = pc_base::load_model('menu_model');
+			$menu_db = M('Menu');
 			@include ($this->installdir.'extention.inc.php');
 			if(!defined('INSTALL_MODULE')) {
-				$file = PC_PATH.'languages'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'lang').DIRECTORY_SEPARATOR.'system_menu.lang.php';
+				$file = APP_PATH.'Lang/'.C('default_lang').'/system_menu.lang.php';
 				if(file_exists($file)) {
 					$content = file_get_contents($file);
 					$content = substr($content,0,-2);
@@ -72,21 +72,21 @@ class module_api {
 		}
 
 		if(!defined('INSTALL_MODULE')) {
-			if (file_exists($this->installdir.'languages'.DIRECTORY_SEPARATOR)) {
-				dir_copy($this->installdir.'languages'.DIRECTORY_SEPARATOR, PC_PATH.'languages'.DIRECTORY_SEPARATOR);
+			if (file_exists($this->installdir.'Lang/')) {
+				dir_copy($this->installdir.'Lang/', APP_PATH.'Lang/');
 			}
-			if(file_exists($this->installdir.'templates'.DIRECTORY_SEPARATOR)) {
-				dir_copy($this->installdir.'templates'.DIRECTORY_SEPARATOR, PC_PATH.'templates'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'tpl_name').DIRECTORY_SEPARATOR.$this->module.DIRECTORY_SEPARATOR);
-				if (file_exists($this->installdir.'templates'.DIRECTORY_SEPARATOR.'name.inc.php')) {
-					$keyid = 'templates|'.pc_base::load_config('system', 'tpl_name').'|'.$this->module;
-					$file_explan[$keyid] = include $this->installdir.'templates'.DIRECTORY_SEPARATOR.'name.inc.php';
-					$templatepath = PC_PATH.'templates'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'tpl_name').DIRECTORY_SEPARATOR;
+			if(file_exists($this->installdir.'Template/')) {
+				dir_copy($this->installdir.'Template/', APP_PATH.'Template/'.C('DEFAULT_THEME').'/'.$this->module.'/');
+				if (file_exists($this->installdir.'Template/name.inc.php')) {
+					$keyid = 'Template|'.C('DEFAULT_THEME').'|'.$this->module;
+					$file_explan[$keyid] = include $this->installdir.'Template/name.inc.php';
+					$templatepath = APP_PATH.'Template/'.C('DEFAULT_THEME').'/';
 					if (file_exists($templatepath.'config.php')) {
 						$style_info = include $templatepath.'config.php';
 						$style_info['file_explan'] = array_merge($style_info['file_explan'], $file_explan);
 						@file_put_contents($templatepath.'config.php', '<?php return '.var_export($style_info, true).';?>');
 					}
-					unlink(PC_PATH.'templates'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'tpl_name').DIRECTORY_SEPARATOR.$this->module.DIRECTORY_SEPARATOR.'name.inc.php');
+					unlink(APP_PATH.'Template/'.C('DEFAULT_THEME').'/'.$this->module.'/name.inc.php');
 				}
 			}
 		}
@@ -101,44 +101,44 @@ class module_api {
 	define('INSTALL', true);
 		if ($module) $this->module = $module;
 		if(!$this->module) {
-			$this->error_msg = L('no_module');
+			$this->errorMsg = L('no_module');
 			return false;
 		}
 		if(!defined('INSTALL_MODULE')) {
-			if (dir_create(PC_PATH.'languages'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'lang').DIRECTORY_SEPARATOR.'test_create_dir')) {
+			if (dir_create(APP_PATH.'Lang/'.C('lang').'/test_create_dir')) {
 				sleep(1);
-				dir_delete(PC_PATH.'languages'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'lang').DIRECTORY_SEPARATOR.'test_create_dir');
+				dir_delete(APP_PATH.'Lang/'.C('lang').'/test_create_dir');
 				
 			} else {
-				$this->error_msg = L('lang_dir_no_write');
+				$this->errorMsg = L('lang_dir_no_write');
 				return false;
 			}
 		}
-		$r = $this->db->get_one(array('module'=>$this->module));
+		$r = $this->db->where(array('module'=>$this->module))->find();
 		if ($r) {
-			$this->error_msg = L('this_module_installed');
+			$this->errorMsg = L('this_module_installed');
 			return false;
 		}
 		if (!$this->installdir) {
-			$this->installdir = PC_PATH.'modules'.DIRECTORY_SEPARATOR.$this->module.DIRECTORY_SEPARATOR.'install'.DIRECTORY_SEPARATOR;
+			$this->installdir = APP_PATH.'Modules/'.$this->module.'/install/';
 		}
 		if (!is_dir($this->installdir)) {
-			$this->error_msg = L('install_dir_no_exist');
+			$this->errorMsg = L('install_dir_no_exist');
 			return false;
 		}
 		if (!file_exists($this->installdir.'module.sql')) {
-			$this->error_msg = L('module_sql_no_exist');
+			$this->errorMsg = L('module_sql_no_exist');
 			return false;
 		}
 		$models = @require($this->installdir.'model.php');
 		if (is_array($models) && !empty($models)) {
 			foreach ($models as $m) {
-				if (!file_exists(PC_PATH.'model'.DIRECTORY_SEPARATOR.$m.'_model.class.php')) {
-					$this->error_msg = $m.L('model_clas_no_exist');
+				if (!file_exists(APP_PATH.'Model/'.$m.'_model.class.php')) {
+					$this->errorMsg = $m.L('model_clas_no_exist');
 					return false;
 				}
 				if (!file_exists($this->installdir.$m.'.sql')) {
-					$this->error_msg = $m.L('sql_no_exist');
+					$this->errorMsg = $m.L('sql_no_exist');
 					return false;
 				}
 			}
@@ -153,13 +153,13 @@ class module_api {
 	public function uninstall($module) {
 		define('UNINSTALL', true);
 		if (!$module) {
-			$this->error_msg = L('illegal_parameters');
+			$this->errorMsg = L('illegal_parameters');
 			return false;
 		}
 		$this->module = $module;
-		$this->uninstalldir = PC_PATH.'modules'.DIRECTORY_SEPARATOR.$this->module.DIRECTORY_SEPARATOR.'uninstall'.DIRECTORY_SEPARATOR;
+		$this->uninstalldir = APP_PATH.'Modules/'.$this->module.'/uninstall/';
 		if (!is_dir($this->uninstalldir)) {
-			$this->error_msg = L('uninstall_dir_no_exist');
+			$this->errorMsg = L('uninstall_dir_no_exist');
 			return false;
 		}
 		if (file_exists($this->uninstalldir.'model.php')) {
@@ -167,7 +167,7 @@ class module_api {
 			if (is_array($models) && !empty($models)) {
 				foreach ($models as $m) {
 					if (!file_exists($this->uninstalldir.$m.'.sql')) {
-						$this->error_msg = $this->module.DIRECTORY_SEPARATOR.'uninstall'.DIRECTORY_SEPARATOR.$m.L('sql_no_exist');
+						$this->errorMsg = $this->module.'/Uninstall/'.$m.L('sql_no_exist');
 						return false;
 					}
 				}
@@ -175,30 +175,30 @@ class module_api {
 		}
 		if (is_array($models) && !empty($models)) {
 			foreach ($models as $m) {
-				$this->m_db = pc_base::load_model($m.'_model');
+				$this->mDb = M($m);
 				$sql = file_get_contents($this->uninstalldir.$m.'.sql');
-				$this->sql_execute($sql);
+				$this->sqlExecute($sql);
 			}
 		}
 		if (file_exists($this->uninstalldir.'extention.inc.php')) {
 			@include ($this->uninstalldir.'extention.inc.php');
 		}
-		if (file_exists(PC_PATH.'languages'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'lang').DIRECTORY_SEPARATOR.$this->module.'.lang.php')) {
-			@unlink(PC_PATH.'languages'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'lang').DIRECTORY_SEPARATOR.$this->module.'.lang.php');
+		if (file_exists(APP_PATH.'Lang/'.C('default_lang').'/'.$this->module.'.lang.php')) {
+			@unlink(APP_PATH.'Lang/'.C('default_lang').'/'.$this->module.'.lang.php');
 		}
-		if (is_dir(PC_PATH.'templates'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'tpl_name').DIRECTORY_SEPARATOR.$this->module)) {
-			@dir_delete(PC_PATH.'templates'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'tpl_name').DIRECTORY_SEPARATOR.$this->module);
+		if (is_dir(APP_PATH.'Template/'.C('DEFAULT_THEME').'/'.$this->module)) {
+			@dir_delete(APP_PATH.'Template/'.C('DEFAULT_THEME').'/'.$this->module);
 		}
-		$templatepath = PC_PATH.'templates'.DIRECTORY_SEPARATOR.pc_base::load_config('system', 'tpl_name').DIRECTORY_SEPARATOR;
+		$templatepath = APP_PATH.'Template/'.C('DEFAULT_THEME').'/';
 		if (file_exists($templatepath.'config.php')) {
-			$keyid = 'templates|'.pc_base::load_config('system', 'tpl_name').'|'.$this->module;
+			$keyid = 'Template|'.C('DEFAULT_THEME').'|'.$this->module;
 			$style_info = include $templatepath.'config.php';
 			unset($style_info['file_explan'][$keyid]);
 			@file_put_contents($templatepath.'config.php', '<?php return '.var_export($style_info, true).';?>');
 		}
-		$menu_db = pc_base::load_model('menu_model');
-		$menu_db->delete(array('m'=>$this->module));
-		$this->db->delete(array('module'=>$this->module));
+		$menu_db = M('Menu');
+		$menu_db->where(array('m'=>$this->module))->delete();
+		$this->db->where(array('module'=>$this->module))->delete();
 		return true;
 	}
 	
@@ -206,17 +206,17 @@ class module_api {
 	 * 执行mysql.sql文件，创建数据表等
 	 * @param string $sql sql语句
 	 */
-	private function sql_execute($sql) {
-	    $sqls = $this->sql_split($sql);
+	private function sqlExecute($sql) {
+	    $sqls = $this->sqlSplit($sql);
 
 		if (is_array($sqls)) {
 			foreach ($sqls as $sql) {
 				if (trim($sql) != '') {
-					$this->m_db->query($sql);
+					$this->mDb->query($sql);
 				}
 			}
 		} else {
-			$this->m_db->query($sqls);
+			$this->mDb->query($sqls);
 		}
 		return true;
 	}
@@ -225,16 +225,15 @@ class module_api {
 	 * 处理sql语句，执行替换前缀都功能。
 	 * @param string $sql 原始的sql，将一些大众的部分替换成私有的
 	 */
-	private function sql_split($sql) {
+	private function sqlSplit($sql) {
 		$dbcharset = $GLOBALS['dbcharset'];
 		if (!$dbcharset) {
-			$dbcharset = pc_base::load_config('database','default');
-			$dbcharset = $dbcharset['charset'];
+			$dbcharset = C('DB_CHARSET');
 		}
-		if($this->m_db->version() > '4.1' && $dbcharset) {
+		if($this->mDb->version() > '4.1' && $dbcharset) {
 			$sql = preg_replace("/TYPE=(InnoDB|MyISAM|MEMORY)( DEFAULT CHARSET=[^; ]+)?/", "ENGINE=\\1 DEFAULT CHARSET=".$dbcharset, $sql);
 		}
-		if($this->m_db->db_tablepre != "phpcms_") $sql = str_replace("phpcms_", $this->m_db->db_tablepre, $sql);
+		if($this->mDb->tablePrefix != "phpcms_") $sql = str_replace("phpcms_", $this->mDb->tablePrefix, $sql);
 		$sql = str_replace(array("\r", '2010-9-05'), array("\n", date('Y-m-d')), $sql);
 		$ret = array();
 		$num = 0;

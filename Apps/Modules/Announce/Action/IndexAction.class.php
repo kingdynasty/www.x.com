@@ -2,7 +2,7 @@
 defined('APP_NAME') or exit('No permission resources.');
 class index {
 	function __construct() {
-		$this->db = pc_base::load_model('announce_model');
+		$this->db = M('Announce');
 	}
 	
 	public function init() {
@@ -20,9 +20,9 @@ class index {
 		$where = '';
 		$where .= "`aid`='".$_GET['aid']."'";
 		$where .= " AND `passed`='1' AND (`endtime` >= '".date('Y-m-d')."' or `endtime`='0000-00-00')";
-		$r = $this->db->get_one($where);
+		$r = $this->db->where($where)->find();
 		if($r['aid']) {
-			$this->db->update(array('hits'=>'+=1'), array('aid'=>$r['aid']));
+			$this->db->data(array('hits'=>'+=1'))->where(array('aid'=>$r['aid']))->save();
 			$template = $r['show_template'] ? $r['show_template'] : 'show';
 			extract($r);
 			$SEO = seo(get_siteid(), '', $title);

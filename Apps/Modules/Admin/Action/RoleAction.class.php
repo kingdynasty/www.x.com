@@ -1,23 +1,23 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
-pc_base::load_sys_class('form', '', 0);
+import('Admin','',0);
+vendor('Pc.Form');
 class RoleAction extends BaseAction {
-	private $db, $priv_db;
+	private $db, $privDb;
 	function __construct() {
 		parent::__construct();
-		$this->db = pc_base::load_model('admin_role_model');
-		$this->priv_db = pc_base::load_model('admin_role_priv_model');
-		$this->op = pc_base::load_app_class('role_op');
+		$this->db = M('AdminRole');
+		$this->privDb = M('AdminRolePriv');
+		$this->op = import('@.Admin.Util.RoleOp');
 	}
 	
 	/**
 	 * 角色管理列表
 	 */
 	public function init() {
-		$infos = $this->db->select($where = '', $data = '*', $limit = '', $order = 'listorder DESC, roleid DESC', $group = '');
+		$infos = $this->db->order('listorder DESC, roleid DESC')->select();
 		
-		include $this->admin_tpl('role_list');
+		include Admin::adminTpl('role_list');
 	}
 	
 	/**
@@ -31,13 +31,13 @@ class RoleAction extends BaseAction {
 			if($this->op->checkname($_POST['info']['rolename'])){
 				showmessage(L('role_duplicate'));
 			}
-			$insert_id = $this->db->insert($_POST['info'],true);
+			$insert_id = $this->db->data($_POST['info'])->add();
 			$this->_cache();
 			if($insert_id){
-				showmessage(L('operation_success'),'?m=admin&c=role&a=init');
+				showmessage(L('operation_success'),'?m=Admin&c=Role&a=init');
 			}
 		} else {
-			include $this->admin_tpl('role_add');
+			include Admin::adminTpl('role_add');
 		}
 		
 	}
@@ -51,13 +51,13 @@ class RoleAction extends BaseAction {
 			if(!is_array($_POST['info']) || empty($_POST['info']['rolename'])){
 				showmessage(L('operation_failure'));
 			}
-			$this->db->update($_POST['info'],array('roleid'=>$_POST['roleid']));
+			$this->db->data($_POST['info'])->where(array('roleid'=>$_POST['roleid']))->save();
 			$this->_cache();
-			showmessage(L('operation_success'),'?m=admin&c=role');
+			showmessage(L('operation_success'),'?m=Admin&c=Role');
 		} else {					
-			$info = $this->db->get_one(array('roleid'=>$_GET['roleid']));
+			$info = $this->db->where(array('roleid'=>$_GET['roleid']))->find();
 			extract($info);		
-			include $this->admin_tpl('role_edit');		
+			include Admin::adminTpl('role_edit');		
 		}
 	}
 	
@@ -67,8 +67,8 @@ class RoleAction extends BaseAction {
 	public function delete() {
 		$roleid = intval($_GET['roleid']);
 		if($roleid == '1') showmessage(L('this_object_not_del'), HTTP_REFERER);
-		$this->db->delete(array('roleid'=>$roleid));
-		$this->priv_db->delete(array('roleid'=>$roleid));
+		$this->db->where(array('roleid'=>$roleid))->delete();
+		$this->privDb->where(array('roleid'=>$roleid))->delete();
 		$this->_cache();
 		showmessage(L('role_del_success'));
 	}
@@ -78,7 +78,7 @@ class RoleAction extends BaseAction {
 	public function listorder() {
 		if(isset($_POST['dosubmit'])) {
 			foreach($_POST['listorders'] as $roleid => $listorder) {
-				$this->db->update(array('listorder'=>$listorder),array('roleid'=>$roleid));
+				$this->db->data(array('listorder'=>$listorder))->where(array('roleid'=>$roleid))->save();
 			}
 			showmessage(L('operation_success'));
 		} else {
@@ -89,24 +89,24 @@ class RoleAction extends BaseAction {
 	/**
 	 * 角色权限设置
 	 */
-	public function role_priv() {
-		$this->menu_db = pc_base::load_model('menu_model');
-		$siteid = $siteid ? $siteid : self::get_siteid(); 
+	public function rolePriv() {
+		$this->menuDb = M('Menu');
+		$siteid = $siteid ? $siteid : Admin::getSiteid();
 		if(isset($_POST['dosubmit'])){
 			if (is_array($_POST['menuid']) && count($_POST['menuid']) > 0) {
 			
-				$this->priv_db->delete(array('roleid'=>$_POST['roleid'],'siteid'=>$_POST['siteid']));
-				$menuinfo = $this->menu_db->select('','`id`,`m`,`c`,`a`,`data`');
+				$this->privDb->where(array('roleid'=>$_POST['roleid'],'siteid'=>$_POST['siteid']))->delete();
+				$menuinfo = $this->menuDb->field('`id`,`m`,`c`,`a`,`data`')->select();
 				foreach ($menuinfo as $_v) $menu_info[$_v[id]] = $_v;
 				foreach($_POST['menuid'] as $menuid){
 					$info = array();
-					$info = $this->op->get_menuinfo(intval($menuid),$menu_info);
+					$info = $this->op->getMenuinfo(intval($menuid),$menu_info);
 					$info['roleid'] = $_POST['roleid'];
 					$info['siteid'] = $_POST['siteid'];
-					$this->priv_db->insert($info);
+					$this->privDb->data($info)->add();
 				}
 			} else {
-				$this->priv_db->delete(array('roleid'=>$_POST['roleid'],'siteid'=>$_POST['siteid']));
+				$this->privDb->where(array('roleid'=>$_POST['roleid'],'siteid'=>$_POST['siteid']))->delete();
 			}
 			$this->_cache();	
 			showmessage(L('operation_success'), HTTP_REFERER);
@@ -115,16 +115,16 @@ class RoleAction extends BaseAction {
 			$siteid = intval($_GET['siteid']);
 			$roleid = intval($_GET['roleid']);
 			if ($siteid) {
-				$menu = pc_base::load_sys_class('tree');
+				$menu = vendor('Pc.Tree','',1);
 				$menu->icon = array('│ ','├─ ','└─ ');
 				$menu->nbsp = '&nbsp;&nbsp;&nbsp;';
-				$result = $this->menu_db->select();
-				$priv_data = $this->priv_db->select(); //获取权限表数据
-				$modules = 'admin,announce,vote,system';
+				$result = $this->menuDb->select();
+				$priv_data = $this->privDb->select(); //获取权限表数据
+				$modules = 'Admin,Announce,Vote,System';
 				foreach ($result as $n=>$t) {
-					$result[$n]['cname'] = L($t['name'],'',$modules);
-					$result[$n]['checked'] = ($this->op->is_checked($t,$_GET['roleid'],$siteid, $priv_data))? ' checked' : '';
-					$result[$n]['level'] = $this->op->get_level($t['id'],$result);
+					$result[$n]['cname'] = L($t['name']);
+					$result[$n]['checked'] = ($this->op->isChecked($t,$_GET['roleid'],$siteid, $priv_data))? ' checked' : '';
+					$result[$n]['level'] = $this->op->getLevel($t['id'],$result);
 					$result[$n]['parentid_node'] = ($t['parentid'])? ' class="child-of-node-'.$t['parentid'].'"' : '';
 				}
 				$str  = "<tr id='node-\$id' \$parentid_node>
@@ -132,58 +132,58 @@ class RoleAction extends BaseAction {
 						</tr>";
 			
 				$menu->init($result);
-				$categorys = $menu->get_tree(0, $str);
+				$categorys = $menu->getTree(0, $str);
 			}
 			$show_header = true;
 			$show_scroll = true;
-			include $this->admin_tpl('role_priv');
+			include Admin::adminTpl('role_priv');
 		}
 	}
 	
-	public function priv_setting() {
-		$sites = pc_base::load_app_class('sites', 'admin');
-		$sites_list = $sites->get_list();
+	public function privSetting() {
+		$sites = import('Sites');
+		$sites_list = $sites->getList();
 		$roleid = intval($_GET['roleid']);
-		include $this->admin_tpl('role_priv_setting');
+		include Admin::adminTpl('role_priv_setting');
 		
 	}
 
 	/**
 	 * 更新角色状态
 	 */
-	public function change_status(){
+	public function changeStatus(){
 		$roleid = intval($_GET['roleid']);
 		$disabled = intval($_GET['disabled']);
-		$this->db->update(array('disabled'=>$disabled),array('roleid'=>$roleid));
+		$this->db->data(array('disabled'=>$disabled))->where(array('roleid'=>$roleid))->save();
 		$this->_cache();
-		showmessage(L('operation_success'),'?m=admin&c=role');
+		showmessage(L('operation_success'),'?m=Admin&c=Role');
 	}
 	/**
 	 * 成员管理
 	 */
-	public function member_manage() {
-		$this->admin_db = pc_base::load_model('admin_model');
+	public function memberManage() {
+		$this->adminDb = M('Admin');
 		$roleid = intval($_GET['roleid']);
-		$roles = getcache('role','commons');
-		$infos = $this->admin_db->select(array('roleid'=>$roleid));
-		include $this->admin_tpl('admin_list');
+		$roles = cache('role','Commons');
+		$infos = $this->adminDb->where(array('roleid'=>$roleid))->select();
+		include Admin::adminTpl('admin_list');
 	}
 		
 	/**
 	 * 设置栏目权限
 	 */
-	public function setting_cat_priv() {
+	public function settingCatPriv() {
 		$roleid = isset($_GET['roleid']) && intval($_GET['roleid']) ? intval($_GET['roleid']) : showmessage(L('illegal_parameters'), HTTP_REFERER);
 		$op = isset($_GET['op']) && intval($_GET['op']) ? intval($_GET['op']) : '';
 		switch ($op) {
 			case 1:
 			$siteid = isset($_GET['siteid']) && intval($_GET['siteid']) ? intval($_GET['siteid']) : showmessage(L('illegal_parameters'), HTTP_REFERER);
-			pc_base::load_app_class('role_cat', '', 0);
-			$category = role_cat::get_category($siteid);
+			import('@.Admin.Util.RoleCat','',0);
+			$category = RoleCat::getCategory($siteid);
 			//获取角色当前权限设置
-			$priv = role_cat::get_roleid($roleid, $siteid);
+			$priv = RoleCat::getRoleid($roleid, $siteid);
 			//加载tree
-			$tree = pc_base::load_sys_class('tree');
+			$tree = vendor('Pc.Tree','',1);
 			$categorys = array();
 			foreach ($category as $k=>$v) {
 				if ($v['type'] == 1) {
@@ -221,21 +221,21 @@ class RoleAction extends BaseAction {
 			  </tr>";
 			
 			$tree->init($category);
-			$categorys = $tree->get_tree(0, $str);
-			include $this->admin_tpl('role_cat_priv_list');
+			$categorys = $tree->getTree(0, $str);
+			include Admin::adminTpl('role_cat_priv_list');
 		break;
 		
 		case 2:
 			$siteid = isset($_GET['siteid']) && intval($_GET['siteid']) ? intval($_GET['siteid']) : showmessage(L('illegal_parameters'), HTTP_REFERER);
-			pc_base::load_app_class('role_cat', '', 0);
-			role_cat::updata_priv($roleid, $siteid, $_POST['priv']);
-			showmessage(L('operation_success'),'?m=admin&c=role&a=init', '', 'edit');
+			import('@.Admin.Util.RoleCat', '', 0);
+			RoleCat::updataPriv($roleid, $siteid, $_POST['priv']);
+			showmessage(L('operation_success'),'?m=Admin&c=Role&a=init', '', 'edit');
 			break;
 		
 		default:
-			$sites = pc_base::load_app_class('sites', 'admin');
-			$sites_list = $sites->get_list();
-			include $this->admin_tpl('role_cat_priv');
+			$sites = import('Sites');
+			$sites_list = $sites->getList();
+			include Admin::adminTpl('role_cat_priv');
 		break;
 		}
 	}	
@@ -244,13 +244,13 @@ class RoleAction extends BaseAction {
 	 */
 	private function _cache() {
 
-		$infos = $this->db->select(array('disabled'=>'0'), $data = '`roleid`,`rolename`', '', 'roleid ASC');
+		$infos = $this->db->where(array('disabled'=>'0'))->field('`roleid`,`rolename`')->order('roleid ASC')->select();
 		$role = array();
 		foreach ($infos as $info){
 			$role[$info['roleid']] = $info['rolename'];
 		}
 		$this->_cache_siteid($role);
-		setcache('role', $role,'commons');
+		cache('role', $role,'Commons');
 		return $infos;
 	}
 	
@@ -260,7 +260,7 @@ class RoleAction extends BaseAction {
 	private function _cache_siteid($role) {
 		$sitelist = array();
 		foreach($role as $n=>$r) {
-			$sitelists = $this->priv_db->select(array('roleid'=>$n),'siteid', '', 'siteid');
+			$sitelists = $this->privDb->where(array('roleid'=>$n))->field('siteid')->order('siteid')->select();
 			foreach($sitelists as $site) {
 				foreach($site as $v){
 					$sitelist[$n][] = intval($v);
@@ -269,7 +269,7 @@ class RoleAction extends BaseAction {
 		}
 		if(is_array($sitelist)) {
 			$sitelist = @array_map("array_unique", $sitelist);
-			setcache('role_siteid', $sitelist,'commons');
+			cache('role_siteid', $sitelist,'Commons');
 		}								
 		return $sitelist;
 	}

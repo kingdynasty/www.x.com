@@ -1,25 +1,25 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin');//如果不初始化，则其内部class也无法检查执行
 class IndexAction extends BaseAction {
-	public function __construct() {
-		parent::__construct();
-		$this->db = pc_base::load_model('admin_model');
-		$this->menu_db = pc_base::load_model('menu_model');
-		$this->panel_db = pc_base::load_model('admin_panel_model');
+	public function _initialize() {
+		$this->db = M('Admin');
+		$this->menuDb = M('Menu');
+		$this->panelDb = M('AdminPanel');
 	}
 	
 	public function init () {
 		$userid = $_SESSION['userid'];
-		$admin_username = param::get_cookie('admin_username');
-		$roles = getcache('role','commons');
+		$admin_username = cookie('admin_username');
+		$roles = cache('role','Commons');
 		$rolename = $roles[$_SESSION['roleid']];
-		$site = pc_base::load_app_class('sites');
-		$sitelist = $site->get_list($_SESSION['roleid']);
-		$currentsite = $this->get_siteinfo(param::get_cookie('siteid'));
+		$Sites = import('Sites');
+		$sitelist = $Sites->getList($_SESSION['roleid']);
+		$currentsite = Admin::getSiteInfo(cookie('siteid'));
 		/*管理员收藏栏*/
-		$adminpanel = $this->panel_db->select(array('userid'=>$userid), "*",20 , 'datetime');
-		include $this->admin_tpl('index');
+		$adminpanel = $this->panelDb->where(array('userid'=>$userid))->limit(20)->order('datetime')->select();
+		include Admin::adminTpl('index');
+		$this->mytrace();
 	}
 	
 	public function login() {
@@ -34,105 +34,104 @@ class IndexAction extends BaseAction {
 				}
 			} else { //口令卡验证
 				if (!isset($_SESSION['card_verif']) || $_SESSION['card_verif'] != 1) {
-					showmessage(L('your_password_card_is_not_validate'), '?m=admin&c=index&a=public_card');
+					showmessage(L('your_password_card_is_not_validate'), '?m=Admin&c=Index&a=publicCard');
 				}
 				$username = $_SESSION['card_username'] ? $_SESSION['card_username'] :  showmessage(L('nameerror'),HTTP_REFERER);
 			}
 			
 			//密码错误剩余重试次数
-			$this->times_db = pc_base::load_model('times_model');
-			$rtime = $this->times_db->get_one(array('username'=>$username,'isadmin'=>1));
-			$maxloginfailedtimes = getcache('common','commons');
+			$this->timesDb = M('Times');			
+			$rtime = $this->timesDb->where(array('username'=>$username,'isadmin'=>1))->find();
+			$maxloginfailedtimes = cache('common','Commons');
 			$maxloginfailedtimes = (int)$maxloginfailedtimes['maxloginfailedtimes'];
-
-			if($rtime['times'] > $maxloginfailedtimes) {
-				$minute = 60-floor((SYS_TIME-$rtime['logintime'])/60);
+			if($rtime['times'] >= $maxloginfailedtimes) {
+				$minute = 60-floor(($GLOBALS['_beginTime']-$rtime['logintime'])/60);
+				trace($maxloginfailedtimes,'$maxloginfailedtimes');
+				$this->mytrace();
 				showmessage(L('wait_1_hour',array('minute'=>$minute)));
 			}
 			//查询帐号
-			$r = $this->db->get_one(array('username'=>$username));
-			if(!$r) showmessage(L('user_not_exist'),'?m=admin&c=index&a=login');
+			$r = $this->db->where(array('username'=>$username))->find();
+			if(!$r) showmessage(L('user_not_exist'),'?m=Admin&c=Index&a=login');
 			$password = md5(md5(trim((!isset($_GET['card']) ? $_POST['password'] : $_SESSION['card_password']))).$r['encrypt']);
 			
 			if($r['password'] != $password) {
 				$ip = ip();
 				if($rtime && $rtime['times'] < $maxloginfailedtimes) {
 					$times = $maxloginfailedtimes-intval($rtime['times']);
-					$this->times_db->update(array('ip'=>$ip,'isadmin'=>1,'times'=>'+=1'),array('username'=>$username));
+					$this->timesDb->data(array('ip'=>$ip,'isadmin'=>1,'times'=>'+=1'))->where(array('username'=>$username))->save();
 				} else {
-					$this->times_db->delete(array('username'=>$username,'isadmin'=>1));
-					$this->times_db->insert(array('username'=>$username,'ip'=>$ip,'isadmin'=>1,'logintime'=>SYS_TIME,'times'=>1));
+					$this->timesDb->where(array('username'=>$username,'isadmin'=>1))->delete();
+					$this->timesDb->data(array('username'=>$username,'ip'=>$ip,'isadmin'=>1,'logintime'=>$GLOBALS['_beginTime'],'times'=>1))->add();
 					$times = $maxloginfailedtimes;
 				}
-				showmessage(L('password_error',array('times'=>$times)),'?m=admin&c=index&a=login',3000);
+				showmessage(L('password_error',array('times'=>$times)),'?m=Admin&c=Index&a=login',3000);
 			}
-			$this->times_db->delete(array('username'=>$username));
+			$this->timesDb->where(array('username'=>$username))->delete();
 			
 			//查看是否使用口令卡
-			if (!isset($_GET['card']) && $r['card'] && pc_base::load_config('system', 'safe_card') == 1) {
+			if (!isset($_GET['card']) && $r['card'] && C('safe_card') == 1) {
 				$_SESSION['card_username'] = $username;
 				$_SESSION['card_password'] = $_POST['password'];
-				header("location:?m=admin&c=index&a=public_card");
+				header("location:?m=Admin&c=Index&a=publicCard");
 				exit;
-			} elseif (isset($_GET['card']) && pc_base::load_config('system', 'safe_card') == 1 && $r['card']) {//对口令卡进行验证
+			} elseif (isset($_GET['card']) && C('safe_card') == 1 && $r['card']) {//对口令卡进行验证
 				isset($_SESSION['card_username']) ? $_SESSION['card_username'] = '' : '';
 				isset($_SESSION['card_password']) ? $_SESSION['card_password'] = '' : '';
 				isset($_SESSION['card_password']) ? $_SESSION['card_verif'] = '' : '';
 			}
 			
-			$this->db->update(array('lastloginip'=>ip(),'lastlogintime'=>SYS_TIME),array('userid'=>$r['userid']));
+			$this->db->data(array('lastloginip'=>ip(),'lastlogintime'=>$GLOBALS['_beginTime']))->where(array('userid'=>$r['userid']))->save();
 			$_SESSION['userid'] = $r['userid'];
 			$_SESSION['roleid'] = $r['roleid'];
 			$_SESSION['pc_hash'] = random(6,'abcdefghigklmnopqrstuvwxwyABCDEFGHIGKLMNOPQRSTUVWXWY0123456789');
 			$_SESSION['lock_screen'] = 0;
-			$default_siteid = self::return_siteid();
-			$cookie_time = SYS_TIME+86400*30;
-			if(!$r['lang']) $r['lang'] = 'zh-cn';
-			param::set_cookie('admin_username',$username,$cookie_time);
-			param::set_cookie('siteid', $default_siteid,$cookie_time);
-			param::set_cookie('userid', $r['userid'],$cookie_time);
-			param::set_cookie('admin_email', $r['email'],$cookie_time);
-			param::set_cookie('sys_lang', $r['lang'],$cookie_time);
-			showmessage(L('login_success'),'?m=admin&c=index');
+			$default_siteid = Admin::returnSiteid();
+			$cookie_time = $GLOBALS['_beginTime']+86400*30;
+			cookie('admin_username',$username,$cookie_time);
+			cookie('siteid', $default_siteid,$cookie_time);
+			cookie('userid', $r['userid'],$cookie_time);
+			cookie('admin_email', $r['email'],$cookie_time);
+			showmessage(L('login_success'),'?m=Admin&c=Index');
 		} else {
-			pc_base::load_sys_class('form', '', 0);
-			include $this->admin_tpl('login');
+			vendor('Pc.Form');			
+			include Admin::adminTpl('login');
 		}
 	}
 	
-	public function public_card() {
+	public function publicCard() {
 		$username = $_SESSION['card_username'] ? $_SESSION['card_username'] :  showmessage(L('nameerror'),HTTP_REFERER);
-		$r = $this->db->get_one(array('username'=>$username));
-		if(!$r) showmessage(L('user_not_exist'),'?m=admin&c=index&a=login');
+		$r = $this->db->where(array('username'=>$username))->find();
+		if(!$r) showmessage(L('user_not_exist'),'?m=Admin&c=Index&a=login');
 		if (isset($_GET['dosubmit'])) {
-			pc_base::load_app_class('card', 'admin', 0);
-			$result = card::verification($r['card'], $_POST['code'], $_POST['rand']);
+			import('@.Admin.Util.Card','',0);
+			$result = Card::verification($r['card'], $_POST['code'], $_POST['rand']);
 			$_SESSION['card_verif'] = 1;
-			header("location:?m=admin&c=index&a=login&dosubmit=1&card=1");
+			header("location:?m=Admin&c=Index&a=login&dosubmit=1&card=1");
 			exit;
 		}
-		pc_base::load_app_class('card', 'admin', 0);
-		$rand = card::authe_rand($r['card']);
-		include $this->admin_tpl('login_card');
+		import('@.Admin.Util.Card','',0);
+		$rand = Card::autheRand($r['card']);
+		include Admin::adminTpl('login_card');
 	}
 	
-	public function public_logout() {
+	public function publicLogout() {
 		$_SESSION['userid'] = 0;
 		$_SESSION['roleid'] = 0;
-		param::set_cookie('admin_username','');
-		param::set_cookie('userid',0);
+		cookie('admin_username',null);
+		cookie('userid',null);
 		
 		//退出phpsso
-		$phpsso_api_url = pc_base::load_config('system', 'phpsso_api_url');
+		$phpsso_api_url = C('phpsso_api_url');
 		$phpsso_logout = '<script type="text/javascript" src="'.$phpsso_api_url.'/api.php?op=logout" reload="1"></script>';
 		
-		showmessage(L('logout_success').$phpsso_logout,'?m=admin&c=index&a=login');
+		showmessage(L('logout_success').$phpsso_logout,'?m=Admin&c=Index&a=login');
 	}
 	
 	//左侧菜单
-	public function public_menu_left() {
+	public function publicMenuLeft() {
 		$menuid = intval($_GET['menuid']);
-		$datas = admin::admin_menu($menuid);
+		$datas = Admin::adminMenu($menuid);
 		if (isset($_GET['parentid']) && $parentid = intval($_GET['parentid']) ? intval($_GET['parentid']) : 10) {
 			foreach($datas as $_value) {
 	        	if($parentid==$_value['id']) {
@@ -143,75 +142,74 @@ class IndexAction extends BaseAction {
 	        	}      	
 	        }
 		} else {
-			include $this->admin_tpl('left');
+			include Admin::adminTpl('left');
 		}
 		
 	}
 	//当前位置
-	public function public_current_pos() {
-		echo admin::current_pos($_GET['menuid']);
+	public function publicCurrentPos() {
+		echo admin::currentPos($_GET['menuid']);
 		exit;
 	}
 	
 	/**
 	 * 设置站点ID COOKIE
 	 */
-	public function public_set_siteid() {
+	public function publicSetSiteid() {
 		$siteid = isset($_GET['siteid']) && intval($_GET['siteid']) ? intval($_GET['siteid']) : exit('0'); 
-		param::set_cookie('siteid', $siteid);
+		cookie('siteid', $siteid);
 		exit('1');
 	}
 	
-	public function public_ajax_add_panel() {
+	public function publicAjaxAddPanel() {
 		$menuid = isset($_POST['menuid']) ? $_POST['menuid'] : exit('0');
-		$menuarr = $this->menu_db->get_one(array('id'=>$menuid));
+		$menuarr = $this->menuDb->where(array('id'=>$menuid))->find();
 		$url = '?m='.$menuarr['m'].'&c='.$menuarr['c'].'&a='.$menuarr['a'].'&'.$menuarr['data'];
-		$data = array('menuid'=>$menuid, 'userid'=>$_SESSION['userid'], 'name'=>$menuarr['name'], 'url'=>$url, 'datetime'=>SYS_TIME);
-		$this->panel_db->insert($data, '', 1);
-		$panelarr = $this->panel_db->listinfo(array('userid'=>$_SESSION['userid']), "datetime");
+		$data = array('menuid'=>$menuid, 'userid'=>$_SESSION['userid'], 'name'=>$menuarr['name'], 'url'=>$url, 'datetime'=>$GLOBALS['_beginTime']);
+		$this->panelDb->data($data)->add();
+		$panelarr = $this->panelDb->where(array('userid'=>$_SESSION['userid']))->order("datetime")->select();
 		foreach($panelarr as $v) {
 			echo "<span><a onclick='paneladdclass(this);' target='right' href='".$v['url'].'&menuid='.$v['menuid']."&pc_hash=".$_SESSION['pc_hash']."'>".L($v['name'])."</a>  <a class='panel-delete' href='javascript:delete_panel(".$v['menuid'].");'></a></span>";
 		}
 		exit;
 	}
 	
-	public function public_ajax_delete_panel() {
+	public function publicAjaxDeletePanel() {
 		$menuid = isset($_POST['menuid']) ? $_POST['menuid'] : exit('0');
-		$this->panel_db->delete(array('menuid'=>$menuid, 'userid'=>$_SESSION['userid']));
+		$this->panelDb->where(array('menuid'=>$menuid, 'userid'=>$_SESSION['userid']))->delete();
 
-		$panelarr = $this->panel_db->listinfo(array('userid'=>$_SESSION['userid']), "datetime");
+		$panelarr = $this->panelDb->where(array('userid'=>$_SESSION['userid']))->order("datetime")->select();
 		foreach($panelarr as $v) {
 			echo "<span><a onclick='paneladdclass(this);' target='right' href='".$v['url']."&pc_hash=".$_SESSION['pc_hash']."'>".L($v['name'])."</a> <a class='panel-delete' href='javascript:delete_panel(".$v['menuid'].");'></a></span>";
 		}
 		exit;
 	}
-	public function public_main() {
-		pc_base::load_app_func('global');
-		pc_base::load_app_func('admin');
-		define('PC_VERSION', pc_base::load_config('version','pc_version'));
-		define('PC_RELEASE', pc_base::load_config('version','pc_release'));	
+	public function publicMain() {		
+		load('@.admin');
+		define('PC_VERSION', C('pc_version'));
+		define('PC_RELEASE', C('pc_release'));	
 	
-		$admin_username = param::get_cookie('admin_username');
-		$roles = getcache('role','commons');
+		$admin_username = cookie('admin_username');
+		$roles = cache('role','Commons');
 		$userid = $_SESSION['userid'];
 		$rolename = $roles[$_SESSION['roleid']];
-		$r = $this->db->get_one(array('userid'=>$userid));
+		$r = $this->db->where(array('userid'=>$userid))->find();
 		$logintime = $r['lastlogintime'];
 		$loginip = $r['lastloginip'];
 		$sysinfo = get_sysinfo();
 		$sysinfo['mysqlv'] = mysql_get_server_info();
 		$show_header = $show_pc_hash = 1;
 		/*检测框架目录可写性*/
-		$pc_writeable = is_writable(PC_PATH.'base.php');
-		$common_cache = getcache('common','commons');
+		$pc_writeable = is_writable(APP_PATH.'ThinkPHP.php');
+		$common_cache = cache('common','Commons');
 		$logsize_warning = errorlog_size() > $common_cache['errorlog_size'] ? '1' : '0';
-		$adminpanel = $this->panel_db->select(array('userid'=>$userid), '*',20 , 'datetime'); 
+		$adminpanel = $this->panelDb->where(array('userid'=>$userid))->limit(20)->order('datetime')->select(); 
  		$product_copyright = base64_decode('5LiK5rW355ub5aSn572R57uc5Y+R5bGV5pyJ6ZmQ5YWs5Y+4');
 		$architecture = base64_decode('546L5Y+C5Yqg');
-		$programmer = base64_decode('546L5Y+C5Yqg44CB546L6ZOB5oiQ44CB6ZmI5a2m5pe644CB6ZmI6bmP44CB546L5a6Y5bqG44CB5byg5bqG44CB54aK55Sf5Y2O44CB5ZCV5a2Y55m9');
+		$programmer = base64_decode('546L5Y+C5Yqg44CB6ZmI5a2m5pe644CB546L5a6Y5bqG44CB5byg5LqM5by644CB6YOd5Zu95paw44CB6YOd5bed44CB6LW15a6P5Lyf');
 		$designer = base64_decode('6JGj6aOe6b6Z44CB5byg5LqM5by6');
 		ob_start();
-		include $this->admin_tpl('main');
+		include Admin::adminTpl('main');
 		$data = ob_get_contents();
 		ob_end_clean();
 		system_information($data);
@@ -219,69 +217,69 @@ class IndexAction extends BaseAction {
 	/**
 	 * 维持 session 登陆状态
 	 */
-	public function public_session_life() {
+	public function publicSessionLife() {
 		$userid = $_SESSION['userid'];
 		return true;
 	}
 	/**
 	 * 锁屏
 	 */
-	public function public_lock_screen() {
+	public function publicLockScreen() {
 		$_SESSION['lock_screen'] = 1;
 	}
-	public function public_login_screenlock() {
+	public function publicLoginScreenlock() {
 		if(empty($_GET['lock_password'])) showmessage(L('password_can_not_be_empty'));
 		//密码错误剩余重试次数
-		$this->times_db = pc_base::load_model('times_model');
-		$username = param::get_cookie('admin_username');
-		$maxloginfailedtimes = getcache('common','commons');
+		$this->timesDb = M('Times');
+		$username = cookie('admin_username');
+		$maxloginfailedtimes = cache('common','Commons');
 		$maxloginfailedtimes = (int)$maxloginfailedtimes['maxloginfailedtimes'];
 		
-		$rtime = $this->times_db->get_one(array('username'=>$username,'isadmin'=>1));
+		$rtime = $this->timesDb->where(array('username'=>$username,'isadmin'=>1))->find();
 		if($rtime['times'] > $maxloginfailedtimes-1) {
-			$minute = 60-floor((SYS_TIME-$rtime['logintime'])/60);
+			$minute = 60-floor(($GLOBALS['_beginTime']-$rtime['logintime'])/60);
 			exit('3');
 		}
 		//查询帐号
-		$r = $this->db->get_one(array('userid'=>$_SESSION['userid']));
+		$r = $this->db->where(array('userid'=>$_SESSION['userid']))->find();
 		$password = md5(md5($_GET['lock_password']).$r['encrypt']);
 		if($r['password'] != $password) {
 			$ip = ip();
 			if($rtime && $rtime['times']<$maxloginfailedtimes) {
 				$times = $maxloginfailedtimes-intval($rtime['times']);
-				$this->times_db->update(array('ip'=>$ip,'isadmin'=>1,'times'=>'+=1'),array('username'=>$username));
+				$this->timesDb->data(array('ip'=>$ip,'isadmin'=>1,'times'=>'+=1'))->where(array('username'=>$username))->save();
 			} else {
-				$this->times_db->insert(array('username'=>$username,'ip'=>$ip,'isadmin'=>1,'logintime'=>SYS_TIME,'times'=>1));
+				$this->timesDb->data(array('username'=>$username,'ip'=>$ip,'isadmin'=>1,'logintime'=>$GLOBALS['_beginTime'],'times'=>1))->add();
 				$times = $maxloginfailedtimes;
 			}
 			exit('2|'.$times);//密码错误
 		}
-		$this->times_db->delete(array('username'=>$username));
+		$this->timesDb->where(array('username'=>$username))->delete();
 		$_SESSION['lock_screen'] = 0;
 		exit('1');
 	}
 	
 	//后台站点地图
-	public function public_map() {
-		 $array = admin::admin_menu(0);
+	public function publicMap() {
+		 $array = Admin::adminMenu(0);
 		 $menu = array();
 		 foreach ($array as $k=>$v) {
 		 	$menu[$v['id']] = $v;
-		 	$menu[$v['id']]['childmenus'] = admin::admin_menu($v['id']);
+		 	$menu[$v['id']]['childmenus'] = Admin::adminMenu($v['id']);
 		 }
 		 $show_header = true;
-		 include $this->admin_tpl('map');
+		 include Admin::adminTpl('map');
 	}
 	
 	/**
 	 * 
 	 * 读取盛大接扣获取appid和secretkey
 	 */
-	public function public_snda_status() {
+	public function publicSndaStatus() {
 		//引入盛大接口
-		if(!strstr(pc_base::load_config('snda','snda_status'), '|')) {
-			$this->site_db = pc_base::load_model('site_model');
-			$uuid_arr = $this->site_db->get_one(array('siteid'=>1), 'uuid');
+		if(!strstr(C('snda_status'), '|')) {
+			$this->siteDb = M('Site');
+			$uuid_arr = $this->siteDb->where(array('siteid'=>1))->field('uuid')->find();
 			$uuid = $uuid_arr['uuid'];
 			$snda_check_url = "http://open.sdo.com/phpcms?cmsid=".$uuid."&sitedomain=".$_SERVER['SERVER_NAME'];
 

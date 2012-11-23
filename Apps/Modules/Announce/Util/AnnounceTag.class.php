@@ -7,11 +7,11 @@
 
 defined('APP_NAME') or exit('No permission resources.');
 
-class announce_tag {
+class AnnounceTag {
 	private $db;
 	
 	public function __construct() {
-		$this->db = pc_base::load_model('announce_model');
+		$this->db = M('Announce');
 	}
 	
 	/**
@@ -24,7 +24,7 @@ class announce_tag {
 		$siteid = $data['siteid'] ? intval($data['siteid']) : get_siteid();
 		if ($siteid) $where .= " AND `siteid`='".$siteid."'";
 		$where .= ' AND `passed`=\'1\' AND (`endtime` >= \''.date('Y-m-d').'\' or `endtime`=\'0000-00-00\')';
-		return $this->db->select($where, '*', $data['limit'], 'aid DESC');
+		return $this->db->where($where)->limit($data['limit'])->order('aid DESC')->select();
 	}
 	
 	public function count() {
@@ -34,11 +34,11 @@ class announce_tag {
 	/**
 	 * pc标签初始方法
 	 */
-	public function pc_tag() {
+	public function pcTag() {
 		//获取站点
-		$sites = pc_base::load_app_class('sites','admin');
-		$sitelist = $sites->pc_tag_list();
-		$result = getcache('special', 'commons');
+		$sites = import('Sites');
+		$sitelist = $sites->pcTagList();
+		$result = cache('special', 'Commons');
 		if(is_array($result)) {
 			$specials = array(L('please_select', '', 'announce'));
 			foreach($result as $r) {

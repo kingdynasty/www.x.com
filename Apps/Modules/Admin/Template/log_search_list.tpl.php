@@ -1,24 +1,24 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_dialog = 1;
-include $this->admin_tpl('header','admin');
+include Admin::adminTpl('header','admin');
 ?>
 <div class="pad-lr-10">
-<form name="searchform" action="?m=admin&c=log&a=search_log&menuid=<?php echo $_GET['menuid'];?>" method="get" >
+<form name="searchform" action="?m=Admin&c=Log&a=searchLog&menuid=<?php echo $_GET['menuid'];?>" method="get" >
 <input type="hidden" value="admin" name="m">
 <input type="hidden" value="log" name="c">
 <input type="hidden" value="search_log" name="a">
 <table width="100%" cellspacing="0" class="search-form">
     <tbody>
 		<tr>
-		<td><div class="explain-col"><?php echo L('module')?>: <?php echo form::select($module_arr,'','name="search[module]"',$default)?> 用户名:  <input type="text" value=<?php echo $_GET['search']['username'];?> class="input-text" name="search[username]" size='10'>  时 间:  <?php echo form::date('search[start_time]',$_GET['search']['start_time'],'1')?> 至   <?php echo form::date('search[end_time]',$_GET['search']['end_time'],'1')?>    <input type="submit" value="确定搜索" class="button" name="dosubmit">
+		<td><div class="explain-col"><?php echo L('module')?>: <?php echo Form::select($module_arr,'','name="search[module]"',$default)?> 用户名:  <input type="text" value=<?php echo $_GET['search']['username'];?> class="input-text" name="search[username]" size='10'>  时 间:  <?php echo Form::date('search[start_time]',$_GET['search']['start_time'],'1')?> 至   <?php echo Form::date('search[end_time]',$_GET['search']['end_time'],'1')?>    <input type="submit" value="确定搜索" class="button" name="dosubmit">
 		</div>
 		</td>
 		</tr>
     </tbody>
 </table>
 </form>
-<form name="myform" id="myform" action="?m=admin&c=log&a=delete" method="post" onsubmit="checkuid();return false;">
+<form name="myform" id="myform" action="?m=Admin&c=Log&a=delete" method="post" onsubmit="checkuid();return false;">
 <div class="table-list">
  <table width="100%" cellspacing="0">
         <thead>

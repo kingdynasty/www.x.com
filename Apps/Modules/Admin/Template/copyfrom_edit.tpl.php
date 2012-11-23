@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 <script type="text/javascript">
 <!--
@@ -13,7 +13,7 @@ include $this->admin_tpl('header');
 </script>
 
 <div class="pad_10">
-<form action="?m=admin&c=copyfrom&a=edit" method="post" name="myform" id="myform" >
+<form action="?m=Admin&c=Copyfrom&a=edit" method="post" name="myform" id="myform" >
 <table width="100%" cellpadding="2" cellspacing="1" class="table_form">
 	<tr> 
       <th width="60"><?php echo L('copyfrom_name');?> :</th>
@@ -25,7 +25,7 @@ include $this->admin_tpl('header');
     </tr> 
 	<tr> 
       <th><?php echo L('copyfrom_logo')?> :</th>
-      <td><?php echo form::images('info[thumb]', 'thumb', $thumb, 'admin')?></td>
+      <td><?php echo Form::images('info[thumb]', 'thumb', $thumb, 'admin')?></td>
     </tr>
 		<input type="hidden" name="id" value="<?php echo $id?>">
 	  <input type="submit" name="dosubmit" id="dosubmit" class="dialog" value=" <?php echo L('submit')?> ">

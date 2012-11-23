@@ -1,7 +1,7 @@
 <?php 
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_dialog = 1; 
-include $this->admin_tpl('header', 'admin');
+include Admin::adminTpl('header', 'admin');
 ?>
 <div class="pad-lr-10">
 <div class="table-list">
@@ -35,8 +35,8 @@ if (is_array($directory)){
 <?php 
 	} else {  
 		$moduel = $isinstall = $modulename = '';
-		if (file_exists(PC_PATH.'modules'.DIRECTORY_SEPARATOR.$d.DIRECTORY_SEPARATOR.'install'.DIRECTORY_SEPARATOR.'config.inc.php')) {
-			require PC_PATH.'modules'.DIRECTORY_SEPARATOR.$d.DIRECTORY_SEPARATOR.'install'.DIRECTORY_SEPARATOR.'config.inc.php';
+		if (file_exists(APP_PATH.'modules/'.$d.'/install/config.inc.php')) {
+			require APP_PATH.'modules/'.$d.'/install/config.inc.php';
 			$isinstall = L('install');
 		} else {
 			$module = L('unknown');
@@ -68,13 +68,13 @@ if (is_array($directory)){
 
 	function install(id) {
 		window.top.art.dialog({id:'install'}).close();
-		window.top.art.dialog({title:'<?php echo L('module_istall')?>', id:'install', iframe:'?m=admin&c=module&a=install&module='+id, width:'500px', height:'260px'}, function(){var d = window.top.art.dialog({id:'install'}).data.iframe;// 使用内置接口获取iframe对象
+		window.top.art.dialog({title:'<?php echo L('module_istall')?>', id:'install', iframe:'?m=Admin&c=Module&a=install&module='+id, width:'500px', height:'260px'}, function(){var d = window.top.art.dialog({id:'install'}).data.iframe;// 使用内置接口获取iframe对象
 		var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'install'}).close()});
 	}
 
 function uninstall(id) {
 	window.top.art.dialog({id:'install'}).close();
-	window.top.art.dialog({title:'<?php echo L('module_unistall', '', 'admin')?>', id:'install', iframe:'?m=admin&c=module&a=uninstall&module='+id, width:'500px', height:'260px'}, function(){var d = window.top.art.dialog({id:'install'}).data.iframe;// 使用内置接口获取iframe对象
+	window.top.art.dialog({title:'<?php echo L('module_unistall', '', 'admin')?>', id:'install', iframe:'?m=Admin&c=Module&a=uninstall&module='+id, width:'500px', height:'260px'}, function(){var d = window.top.art.dialog({id:'install'}).data.iframe;// 使用内置接口获取iframe对象
 	var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'install'}).close()});
 }
 

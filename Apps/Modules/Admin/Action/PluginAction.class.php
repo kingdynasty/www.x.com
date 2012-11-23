@@ -1,15 +1,15 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
-pc_base::load_sys_class('form', '', 0);
-pc_base::load_sys_func('plugin');
+import('Admin','',0);
+vendor('Pc.Form');
+load('plugin');
 class PluginAction extends BaseAction {
 	private $db,$db_var;
 	function __construct() {
 		parent::__construct();
-		$this->db = pc_base::load_model('plugin_model');
-		$this->db_var = pc_base::load_model('plugin_var_model');
-		pc_base::load_app_func('global');
+		$this->db = M('Plugin');
+		$this->dbVar = M('PluginVar');
+		
 	}
 	
 	/**
@@ -18,9 +18,9 @@ class PluginAction extends BaseAction {
 	public function init() {
 		$show_validator = true;
 		$show_dialog = true;
-		if($pluginfo = $this->db->select('','*','','disable DESC,listorder DESC')) {
+		if($pluginfo = $this->db->order('disable DESC,listorder DESC')->select()) {
 			foreach ($pluginfo as $_k=>$_r) {
-				if(file_exists(PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$_r['dir'].DIRECTORY_SEPARATOR.$_r['dir'].'.class.php')){
+				if(file_exists(APP_PATH.'Plugin/'.$_r['dir'].'/'.$_r['dir'].'.class.php')){
 					$pluginfo[$_k]['url'] = 'plugin.php?id='.$_r['dir'];
 				} else {
 					$pluginfo[$_k]['url'] = '';
@@ -29,7 +29,7 @@ class PluginAction extends BaseAction {
 			}		
 		}
 		
-		include $this->admin_tpl('plugin_list');
+		include Admin::adminTpl('plugin_list');
 	}
 	
 	/**
@@ -45,12 +45,12 @@ class PluginAction extends BaseAction {
 	  			 	$installsdir[] = $_r['dir'];	
 				}		
 			}	
-			$pluginsdir = dir(PC_PATH.'plugin');
+			$pluginsdir = dir(APP_PATH.'Plugin');
 			while (false !== ($entry = $pluginsdir->read())) {
 				$config_file = '';
 				$plugin_data = array();
-				if(!in_array($entry, array('.', '..')) && is_dir(PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$entry) && !in_array($entry, $installsdir) && !$this->db->get_one(array('identification'=>$entry))) {
-					$config_file = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$entry.DIRECTORY_SEPARATOR.'plugin_'.$entry.'.cfg.php';
+				if(!in_array($entry, array('.', '..')) && is_dir(APP_PATH.'Plugin/'.$entry) && !in_array($entry, $installsdir) && !$this->db->where(array('identification'=>$entry))->find()) {
+					$config_file = APP_PATH.'Plugin/'.$entry.'/Plugin'.$entry.'.cfg.php';
 					if(file_exists($config_file)) {
 						$plugin_data = @require($config_file);					
 		  			 	$pluginfo[$plugnum]['name'] = $plugin_data['plugin']['name'];
@@ -61,22 +61,22 @@ class PluginAction extends BaseAction {
 					}
 				}
 			}		
-			include $this->admin_tpl('plugin_list_import');
+			include Admin::adminTpl('plugin_list_import');
 		} else {
 			$dir = trim($_GET['dir']);
 			$license = 0;
-			$config_file = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.'plugin_'.$dir.'.cfg.php';
+			$config_file = APP_PATH.'Plugin/'.$dir.'/plugin_'.$dir.'.cfg.php';
 			if(file_exists($config_file)) {
 				$plugin_data = @require($config_file);
 				$license = ($plugin_data['license'] == '' || !isset($plugin_data['license'])) ? 0 : 1;
 			}
 			if(empty($_GET['license']) && $license) {
-				$submit_url = '?m=admin&c=plugin&a=import&dir='.$dir.'&license=1&pc_hash='. $_SESSION['pc_hash'].'&menuid='.$_GET['menuid'];
+				$submit_url = '?m=Admin&c=Plugin&a=import&dir='.$dir.'&license=1&pc_hash='. $_SESSION['pc_hash'].'&menuid='.$_GET['menuid'];
 			} else {
-				$submit_url = '?m=admin&c=plugin&a=install&dir='.$dir.'&pc_hash='. $_SESSION['pc_hash'].'&menuid='.$_GET['menuid'];
+				$submit_url = '?m=Admin&c=Plugin&a=install&dir='.$dir.'&pc_hash='. $_SESSION['pc_hash'].'&menuid='.$_GET['menuid'];
 			}	
 				$show_header = 0;
-			include $this->admin_tpl('plugin_import_confirm');
+			include Admin::adminTpl('plugin_import_confirm');
 		}
 	}
 	/**
@@ -85,40 +85,40 @@ class PluginAction extends BaseAction {
 	public function delete() {
 		if(isset($_POST['dosubmit'])) {
 			$pluginid = intval($_POST['pluginid']);
-			$plugin_data =  $this->db->get_one(array('pluginid'=>$pluginid));
+			$plugin_data =  $this->db->where(array('pluginid'=>$pluginid))->find();
 			$op_status = FALSE;	
 			$dir = $plugin_data['dir'];
-			$config_file = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.'plugin_'.$dir.'.cfg.php';	
+			$config_file = APP_PATH.'Plugin/'.$dir.'/Plugin'.$dir.'.cfg.php';	
 			if(file_exists($config_file)) {
 				$plugin_data = @require($config_file);
 			}		
-			$filename = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.$plugin_data['plugin']['uninstallfile'];
+			$filename = APP_PATH.'Plugin/'.$dir.'/'.$plugin_data['plugin']['uninstallfile'];
 			if(file_exists($filename)) {
 				@include_once $filename;
 			} else {
 				showmessage(L('plugin_lacks_uninstall_file','','plugin'),HTTP_REFERER);
 			}
 			if($op_status) {
-				$this->db->delete(array('pluginid'=>$pluginid));
-				$this->db_var->delete(array('pluginid'=>$pluginid));
-				delcache($dir,'plugins');
-				delcache($dir.'_var','plugins');
-				$this->set_hook_cache();
+				$this->db->where(array('pluginid'=>$pluginid))->delete();
+				$this->dbVar->where(array('pluginid'=>$pluginid))->delete();
+				cache($dir,NULL,'Plugins');
+				cache($dir.'_var',NULL,'Plugins');
+				$this->setHookCache();
 				if($plugin_data['plugin']['iframe']) {
-					pc_base::load_sys_func('dir');
-					if(!dir_delete(PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$dir)) {
-						showmessage(L('plugin_uninstall_success_no_delete','','plugin'),'?m=admin&c=plugin');
+					load('dir');
+					if(!dir_delete(APP_PATH.'plugin/'.$dir)) {
+						showmessage(L('plugin_uninstall_success_no_delete','','plugin'),'?m=Admin&c=Plugin');
 					}
 				}
-				showmessage(L('plugin_uninstall_success','','plugin'),'?m=admin&c=plugin');
+				showmessage(L('plugin_uninstall_success','','plugin'),'?m=Admin&c=Plugin');
 			} else {
-				showmessage(L('plugin_uninstall_fail','','plugin'),'?m=admin&c=plugin');
+				showmessage(L('plugin_uninstall_fail','','plugin'),'?m=Admin&c=Plugin');
 			}	
 		} else {
 			$show_header = 0;
 			$pluginid = intval($_GET['pluginid']);
-			$plugin_data =  $this->db->get_one(array('pluginid'=>$pluginid));
-			include $this->admin_tpl('plugin_delete_confirm');			
+			$plugin_data =  $this->db->where(array('pluginid'=>$pluginid))->find();
+			include Admin::adminTpl('plugin_delete_confirm');			
 		}
 
 	}
@@ -129,7 +129,7 @@ class PluginAction extends BaseAction {
 	public function install() {
 		$op_status = FALSE;
 		$dir = trim($_GET['dir']);
-		$config_file = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.'plugin_'.$dir.'.cfg.php';		
+		$config_file = APP_PATH.'Plugin/'.$dir.'/plugin_'.$dir.'.cfg.php';		
 		if(file_exists($config_file)) {
 			$plugin_data = @require($config_file);
 		} else {
@@ -140,7 +140,7 @@ class PluginAction extends BaseAction {
 			$app_msg = $app_status == '' ? L('plugin_not_exist_or_pending','','plugin') : ($app_status == 0 || $app_status == 1 ? L('plugin_developing','','plugin') : L('plugin_be_locked','','plugin'));
 			showmessage($app_msg);
 		}
-		if($plugin_data['version'] && $plugin_data['version']!=pc_base::load_config('version', 'pc_version')) {
+		if($plugin_data['version'] && $plugin_data['version']!=C('pc_version')) {
 			showmessage(L('plugin_incompatible','','plugin'));
 		}
 		
@@ -158,10 +158,10 @@ class PluginAction extends BaseAction {
 				}
 			}
 		}
-		if($this->db->get_one(array('identification'=>$plugin_data['identification']))) {
+		if($this->db->where(array('identification'=>$plugin_data['identification']))->find()) {
 			showmessage(L('plugin_duplication_name','','plugin'));
 		};				
-		$filename = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$dir.DIRECTORY_SEPARATOR.$plugin_data['plugin']['installfile'];
+		$filename = APP_PATH.'Plugin/'.$dir.'/'.$plugin_data['plugin']['installfile'];
 		
 		if(file_exists($filename)) {
 			@include_once $filename;
@@ -172,7 +172,7 @@ class PluginAction extends BaseAction {
 			
 			$plugin = array('name'=>new_addslashes($plugin_data['plugin']['name']),'identification'=>$plugin_data['identification'],'appid'=>$plugin_data['appid'],'description'=>new_addslashes($plugin_data['plugin']['description']),'dir'=>$plugin_data['dir'],'copyright'=>new_addslashes($plugin_data['plugin']['copyright']),'setting'=>array2string($plugin_data['plugin']['setting']),'iframe'=>array2string($plugin_data['plugin']['iframe']),'version'=>$plugin_data['plugin']['version'],'disable'=>'0');
 			
-			$pluginid = $this->db->insert($plugin,TRUE);
+			$pluginid = $this->db->data($plugin)->add();
 			
 			//向插件变量表中插入数据
 			if(is_array($plugin_data['plugin_var'])) {
@@ -184,15 +184,15 @@ class PluginAction extends BaseAction {
 						if($_k == 'setting') $_v = array2string($_v);
 						$plugin_var[$_k] = $_v;
 					}
-					$this->db_var->insert($plugin_var);				
+					$this->dbVar->data($plugin_var)->add();				
 				}
 			}		
 			plugin_install_stat($plugin_data['appid']);
-			setcache($plugin_data['identification'], $plugin,'plugins');
-			$this->set_var_cache($pluginid);
-			showmessage(L('plugin_install_success','','plugin'),'?m=admin&c=plugin');
+			cache($plugin_data['identification'], $plugin,'plugins');
+			$this->setVarCache($pluginid);
+			showmessage(L('plugin_install_success','','plugin'),'?m=Admin&c=Plugin');
 		} else {
-			showmessage(L('plugin_install_fail','','plugin'),'?m=admin&c=plugin');
+			showmessage(L('plugin_install_fail','','plugin'),'?m=Admin&c=Plugin');
 		}
 	}	
 	
@@ -209,12 +209,12 @@ class PluginAction extends BaseAction {
 	public function listorder() {
 		if(isset($_POST['dosubmit'])) {
 			foreach($_POST['listorders'] as $pluginid => $listorder) {
-				$this->db->update(array('listorder'=>$listorder),array('pluginid'=>$pluginid));
+				$this->db->data(array('listorder'=>$listorder))->where(array('pluginid'=>$pluginid))->save();
 			}
-			$this->set_hook_cache();
-			showmessage(L('operation_success'),'?m=admin&c=plugin');
+			$this->setHookCache();
+			showmessage(L('operation_success'),'?m=Admin&c=Plugin');
 		} else {
-			showmessage(L('operation_failure'),'?m=admin&c=plugin');
+			showmessage(L('operation_failure'),'?m=Admin&c=Plugin');
 		}
 	}
 	
@@ -223,7 +223,7 @@ class PluginAction extends BaseAction {
 		
 	    if(isset($_POST['dosubmit'])) {
 			$data['identification'] = $_POST['info']['identification'];
-			$data['realease'] = date('YMd',SYS_TIME);
+			$data['realease'] = date('YMd',$GLOBALS['_beginTime']);
 			$data['dir'] = $_POST['info']['identification'];
 			$data['appid'] = '';
 			$data['plugin'] = array(
@@ -236,18 +236,18 @@ class PluginAction extends BaseAction {
 						);
 
 			
-			$filepath = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$data['identification'].DIRECTORY_SEPARATOR.'plugin_'.$data['identification'].'.cfg.php';
-			pc_base::load_sys_func('dir');
+			$filepath = APP_PATH.'Plugin/'.$data['identification'].'/plugin_'.$data['identification'].'.cfg.php';
+			load('dir');
 			dir_create(dirname($filepath));	
 		    $data = "<?php\nreturn ".var_export($data, true).";\n?>";			
-			if(pc_base::load_config('system', 'lock_ex')) {
+			if(C('lock_ex')) {
 				$file_size = file_put_contents($filepath, $data, LOCK_EX);
 			} else {
 				$file_size = file_put_contents($filepath, $data);
 			}
 			echo 'success';
 		} else {
-			include $this->admin_tpl('plugin_design');
+			include Admin::adminTpl('plugin_design');
 		}
 	}
 	/**
@@ -259,33 +259,33 @@ class PluginAction extends BaseAction {
 		$p = intval($_GET[p]) ? intval($_GET[p]) : 1;
 		$s = 8;
 		
-		$data = file_get_contents('http://open.phpcms.cn/index.php?m=open&c=api&a=get_applist&s='.$s.'&p='.$p);
+		$data = file_get_contents('http://open.phpcms.cn/index.php?m=Open&c=Api&a=getApplist&s='.$s.'&p='.$p);
 		$data = array_iconv(json_decode($data, true),'utf-8',CHARSET);
 		
-		$recommed_data = file_get_contents('http://open.phpcms.cn/index.php?m=open&c=api&a=get_recommed_applist&s=5&p=1');
+		$recommed_data = file_get_contents('http://open.phpcms.cn/index.php?m=Open&c=Api&a=getRecommedApplist&s=5&p=1');
 		$recommed_data = array_iconv(json_decode($recommed_data, true),'utf-8',CHARSET);
 		
-		$focus_data = file_get_contents('http://open.phpcms.cn/index.php?m=open&c=api&a=get_app_focus&num=3');
+		$focus_data = file_get_contents('http://open.phpcms.cn/index.php?m=Open&c=Api&a=getAppFocus&num=3');
 		$focus_data = array_iconv(json_decode($focus_data, true),'utf-8',CHARSET);	
 		$pages = $data['pages'];
 		$pre_page = $p <= 1 ? 1 : $p - 1;
 		$next_page = $p >= $pages ? $pages : $p + 1;
-		$pages = '<a class="a1">'.$data['total'].L('plugin_item','','plugin').'</a> <a href="?m=admin&c=plugin&a=appcenter&p=1">'.L('plugin_firstpage').'</a> <a href="?m=admin&c=plugin&a=appcenter&p='.$pre_page.'">'.L('plugin_prepage').'</a> <a href="?m=admin&c=plugin&a=appcenter&p='.$next_page.'">'.L('plugin_nextpage').'</a> <a href="?m=admin&c=plugin&a=appcenter&p='.$pages.'">'.L('plugin_lastpage').'</a>';
+		$pages = '<a class="a1">'.$data['total'].L('plugin_item','','plugin').'</a> <a href="?m=Admin&c=Plugin&a=appcenter&p=1">'.L('plugin_firstpage').'</a> <a href="?m=Admin&c=Plugin&a=appcenter&p='.$pre_page.'">'.L('plugin_prepage').'</a> <a href="?m=Admin&c=Plugin&a=appcenter&p='.$next_page.'">'.L('plugin_nextpage').'</a> <a href="?m=Admin&c=Plugin&a=appcenter&p='.$pages.'">'.L('plugin_lastpage').'</a>';
 		$show_header = 1;
-		include $this->admin_tpl('plugin_appcenter');
+		include Admin::adminTpl('plugin_appcenter');
 	}
 	
 	/**
 	 * 显示应用详情
 	 */
-	public function appcenter_detail() {
+	public function appcenterDetail() {
 		$data = array();
 		$id = intval($_GET['id']);
-		$data = file_get_contents('http://open.phpcms.cn/index.php?m=open&c=api&a=get_detail_byappid&id='.$id);
+		$data = file_get_contents('http://open.phpcms.cn/index.php?m=Open&c=Api&a=getDetailByappid&id='.$id);
 		$data = array_iconv(json_decode($data, true),'utf-8',CHARSET);
 		extract($data);		
 		if($appname) {
-			include $this->admin_tpl('plugin_appcenter_detail');
+			include Admin::adminTpl('plugin_appcenter_detail');
 		} else {
 			showmessage(L('plugin_not_exist_or_pending','','plugin'));
 		}
@@ -294,15 +294,15 @@ class PluginAction extends BaseAction {
 	/**
 	 * 在线安装
 	 */
-	public function install_online() {
+	public function installOnline() {
 		$data = array();
 		$id = intval($_GET['id']);
-		$data = file_get_contents('http://open.phpcms.cn/index.php?m=open&c=api&a=get_detail_byappid&id='.$id);
+		$data = file_get_contents('http://open.phpcms.cn/index.php?m=Open&c=Api&a=getDetailByappid&id='.$id);
 		$data = array_iconv(json_decode($data, true),'utf-8',CHARSET);
 		
 		//如果为iframe类型应用，无需下载压缩包，之间创建插件文件夹
 		if(!empty($data['iframe'])) {
-			$appdirname = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$data['appenname'];
+			$appdirname = APP_PATH.'Plugin/'.$data['appenname'];
 			if(!file_exists($appdirname)) {
 				if(!mkdir($appdirname)) {
 					showmessage(L('plugin_mkdir_fail', '', 'plugin'));
@@ -314,8 +314,8 @@ class PluginAction extends BaseAction {
 	\$op_status = TRUE;
 ?>
 EOF;
-					$uninstallres = @file_put_contents($appdirname.DIRECTORY_SEPARATOR.'uninstall.php', $installdata);
-					$installres = @file_put_contents($appdirname.DIRECTORY_SEPARATOR.'install.php', $installdata);
+					$uninstallres = @file_put_contents($appdirname.'/uninstall.php', $installdata);
+					$installres = @file_put_contents($appdirname.'/install.php', $installdata);
 					
 					$cfgdata = <<<EOF
 <?php
@@ -337,11 +337,11 @@ return array (
 );
 ?>				
 EOF;
-					$cfgres = @file_put_contents($appdirname.DIRECTORY_SEPARATOR.'plugin_'.$data['appenname'].'.cfg.php', $cfgdata);
+					$cfgres = @file_put_contents($appdirname.'/plugin_'.$data['appenname'].'.cfg.php', $cfgdata);
 					
 					//检查配置文件是否写入成功
 					if($installres*$uninstallres*$cfgres > 0) {
-						showmessage(L('plugin_configure_success', '', 'plugin'), 'index.php?m=admin&c=plugin&a=import&dir='.$data['appenname']);
+						showmessage(L('plugin_configure_success', '', 'plugin'), 'index.php?m=Admin&c=Plugin&a=import&dir='.$data['appenname']);
 					} else {
 						showmessage(L('plugin_install_fail', '', 'plugin'));
 					}
@@ -353,22 +353,22 @@ EOF;
 			//远程压缩包地址
 			$upgradezip_url = $data['downurl'];
 			if(empty($upgradezip_url)) {
-				showmessage(L('download_fail', '', 'plugin'), 'index.php?m=admin&c=plugin&a=appcenter');
+				showmessage(L('download_fail', '', 'plugin'), 'index.php?m=Admin&c=Plugin&a=appcenter');
 			}
 			
 			//创建缓存文件夹
 			if(!file_exists(CACHE_PATH.'caches_open')) {
 				@mkdir(CACHE_PATH.'caches_open');
 			}
-			//保存到本地地址
-			$upgradezip_path = CACHE_PATH.'caches_open'.DIRECTORY_SEPARATOR.$data['id'].'.zip';
+			//TODO 保存到本地地址
+			$upgradezip_path = CACHE_PATH.'caches_open/'.$data['id'].'.zip';
 			//解压路径
-			$upgradezip_source_path = CACHE_PATH.'caches_open'.DIRECTORY_SEPARATOR.$data['id'];
+			$upgradezip_source_path = CACHE_PATH.'caches_open/'.$data['id'];
 				
 			//下载压缩包
 			@file_put_contents($upgradezip_path, @file_get_contents($upgradezip_url));
-			//解压缩
-			pc_base::load_app_class('pclzip', 'upgrade', 0);
+			//TODO 解压缩
+			PcBase::loadAppClass('pclzip', 'upgrade', 0);
 			$archive = new PclZip($upgradezip_path);
 	
 			if($archive->extract(PCLZIP_OPT_PATH, $upgradezip_source_path, PCLZIP_OPT_REPLACE_NEWER) == 0) {
@@ -378,24 +378,24 @@ EOF;
 			@unlink($upgradezip_path);
 			
 			//拷贝gbk/upload文件夹到根目录
-			$copy_from = $upgradezip_source_path.DIRECTORY_SEPARATOR.CHARSET;
+			$copy_from = $upgradezip_source_path.'/'.CHARSET;
 			//动态程序路径
-			$copy_to_pcpath = PC_PATH.'plugin';
+			$copy_to_pcpath = APP_PATH.'Plugin';
 			//静态程序路径
-			$copy_to_staticspath = PHPCMS_PATH.'statics'.DIRECTORY_SEPARATOR.'plugin';
+			$copy_to_staticspath = CMS_PATH.'Statics/Plugin';
 
 			//应用文件夹名称
 			$appdirname = $data['appenname'];
 	
 			$this->copyfailnum = 0;
-			$this->copydir($copy_from.DIRECTORY_SEPARATOR.'phpcms'.DIRECTORY_SEPARATOR.'plugin', $copy_to_pcpath, $_GET['cover']);
-			$this->copydir($copy_from.DIRECTORY_SEPARATOR.'statics'.DIRECTORY_SEPARATOR.'plugin', $copy_to_staticspath, $_GET['cover']);
+			$this->copydir($copy_from.'/Apps/Plugin', $copy_to_pcpath, $_GET['cover']);
+			$this->copydir($copy_from.'/Statics/Plugin', $copy_to_staticspath, $_GET['cover']);
 			$this->deletedir($copy_from);
 			//检查文件操作权限，是否复制成功
 			if($this->copyfailnum > 0) {
-				showmessage(L('download_fail', '', 'plugin'), 'index.php?m=admin&c=plugin&a=appcenter');	
+				showmessage(L('download_fail', '', 'plugin'), 'index.php?m=Admin&c=Plugin&a=appcenter');	
 			} else {
-				showmessage(L('download_success', '', 'plugin'), 'index.php?m=admin&c=plugin&a=import&dir='.$appdirname);	
+				showmessage(L('download_success', '', 'plugin'), 'index.php?m=Admin&c=Plugin&a=import&dir='.$appdirname);	
 			}
 		}
 	}
@@ -404,9 +404,9 @@ EOF;
 	 * 异步方式调用详情
 	 * Enter description here ...
 	 */
-	public function public_appcenter_ajx_detail() {
+	public function publicAppcenterAjxDetail() {
 		$id = intval($_GET['id']);
-		$data = file_get_contents('http://open.phpcms.cn/index.php?m=open&c=api&a=get_detail_byappid&id='.$id);
+		$data = file_get_contents('http://open.phpcms.cn/index.php?m=Open&c=Api&a=getDetailByappid&id='.$id);
 		//$data = json_decode($data, true);
 		echo $_GET['jsoncallback'].'(',$data,')';
 		exit;		
@@ -419,19 +419,19 @@ EOF;
 		if(isset($_POST['dosubmit'])) {
 			$pluginid = intval($_POST['pluginid']);
 			foreach ($_POST['info'] as $_k => $_v) {
-				 $this->db_var->update(array('value'=>$_v),array('pluginid'=>$pluginid,'fieldname'=>$_k));
+				 $this->dbVar->data(array('value'=>$_v))->where(array('pluginid'=>$pluginid,'fieldname'=>$_k))->save();
 			}
-			$this->set_var_cache($pluginid);
+			$this->setVarCache($pluginid);
 			showmessage(L('operation_success'),HTTP_REFERER);
 		} else {
 			$pluginid = intval($_GET['pluginid']);
 			$plugin_menus = array();
-			$info = $this->db->get_one(array('pluginid'=>$pluginid));
+			$info = $this->db->where(array('pluginid'=>$pluginid))->find();
 			extract($info);
 			if(!isset($_GET['module'])) {	
 				$plugin_menus[] =array('name'=>L('plugin_desc','','plugin'),'url'=>'','status'=>'1');
 				if($disable){
-					if($info_var = $this->db_var->select(array('pluginid'=>$pluginid),'*','','listorder ASC,id DESC')) {
+					if($info_var = $this->dbVar->select(array('pluginid'=>$pluginid),'*','','listorder ASC,id DESC')) {
 						$plugin_menus[] =array('name'=>L('plugin_config','','plugin'),'url'=>'','status'=>'0');
 						$form = $this->creatconfigform($info_var);
 					}
@@ -444,11 +444,11 @@ EOF;
 						}
 					}
 				}
-				include $this->admin_tpl('plugin_setting');
+				include Admin::adminTpl('plugin_setting');
 			} else {
 				define('PLUGIN_ID', $identification);
 				$plugin_module = trim($_GET['module']);
-				$plugin_admin_path = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$identification.DIRECTORY_SEPARATOR.'plugin_admin.class.php';
+				$plugin_admin_path = APP_PATH.'plugin/'.$identification.'/plugin_admin.class.php';
 				if (file_exists($plugin_admin_path)) {
 					include $plugin_admin_path;
 					$plugin_admin = new plugin_admin($pluginid);
@@ -464,8 +464,8 @@ EOF;
 	public function status() {
 		$disable = intval($_GET['disable']);
 		$pluginid = intval($_GET['pluginid']);
-		$this->db->update(array('disable'=>$disable),array('pluginid'=>$pluginid));
-		$this->set_cache($pluginid);
+		$this->db->data(array('disable'=>$disable))->where(array('pluginid'=>$pluginid))->save();
+		$this->setCache($pluginid);
 		showmessage(L('operation_success'),HTTP_REFERER);
 	}
 	
@@ -473,13 +473,13 @@ EOF;
 	 * 设置字段缓存
 	 * @param int $pluginid
 	 */
-	private function set_var_cache($pluginid) {
-		if($info = $this->db_var->select(array('pluginid'=>$pluginid))) {
-			$plugin_data =  $this->db->get_one(array('pluginid'=>$pluginid));
+	private function setVarCache($pluginid) {
+		if($info = $this->dbVar->select(array('pluginid'=>$pluginid))) {
+			$plugin_data =  $this->db->where(array('pluginid'=>$pluginid))->find();
 			foreach ($info as $_value) {
 				$plugin_vars[$_value['fieldname']] = $_value['value'];
 			}
-			setcache($plugin_data['identification'].'_var', $plugin_vars,'plugins');
+			cache($plugin_data['identification'].'_var', $plugin_vars,'plugins');
 		}
 	}
 	
@@ -487,27 +487,27 @@ EOF;
 	 * 设置缓存
 	 * @param int $pluginid
 	 */
-	private function set_cache($pluginid) {
-		if($info = $this->db->get_one(array('pluginid'=>$pluginid))) {		
-			setcache($info['identification'], $info,'plugins');
+	private function setCache($pluginid) {
+		if($info = $this->db->where(array('pluginid'=>$pluginid))->find()) {		
+			cache($info['identification'], $info,'plugins');
 		}
-		$this->set_hook_cache();
+		$this->setHookCache();
 	}
 
 	/**
 	 * 设置hook缓存
 	 */
-	function set_hook_cache() {
-		if($info = $this->db->select(array('disable'=>1),'*','','listorder DESC')) {
+	function setHookCache() {
+		if($info = $this->db->pcSelect(array('disable'=>1),'*','','listorder DESC')) {
 			foreach($info as $i) {
 				$id = $i['identification'];
-				$hook_file = PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$id.DIRECTORY_SEPARATOR.'hook.class.php';
+				$hook_file = APP_PATH.'plugin/'.$id.'/hook.class.php';
 				if(file_exists($hook_file)) {
 					$hook[$i['appid']] = $i['identification'];
 				}
 			}			
 		}
-		setcache('hook',$hook,'plugins');
+		cache('hook',$hook,'plugins');
 	}
 	
 	/**
@@ -533,13 +533,13 @@ EOF;
 			if($fieldtype == 'text') {
 				return '<input type="text" name="info['.$fieldname.']" id="'.$fieldname.'" value="'.$value.'" class="input-text" '.$formattribute.' > '.' '.$description;
 			} elseif($fieldtype == 'checkbox') {
-				return form::checkbox(string2array($setting),$value,"name='info[$fieldname]' $formattribute",'',$fieldname).' '.$description;
+				return Form::checkbox(string2array($setting),$value,"name='info[$fieldname]' $formattribute",'',$fieldname).' '.$description;
 			} elseif($fieldtype == 'radio') {
-				return form::radio(string2array($setting),$value,"name='info[$fieldname]' $formattribute",'',$fieldname).' '.$description;
+				return Form::radio(string2array($setting),$value,"name='info[$fieldname]' $formattribute",'',$fieldname).' '.$description;
 			}  elseif($fieldtype == 'select') {
-				return form::select(string2array($setting),$value,"name='info[$fieldname]' $formattribute",'',$fieldname).' '.$description;
+				return Form::select(string2array($setting),$value,"name='info[$fieldname]' $formattribute",'',$fieldname).' '.$description;
 			} elseif($fieldtype == 'datetime') {
-				return form::date("info[$fieldname]",$value,$isdatetime,1).' '.$description;
+				return Form::date("info[$fieldname]",$value,$isdatetime,1).' '.$description;
 			} elseif($fieldtype == 'textarea') {
 				return '<textarea name="info['.$fieldname.']" id="'.$fieldname.'" '.$formattribute.'>'.$value.'</textarea>'.' '.$description;
 			}
@@ -568,7 +568,7 @@ EOF;
 	 * @param string $sql 要执行的sql语句
 	 */	
  	private function _sql_split($sql) {
-		$database = pc_base::load_config('database');
+		$database = PcBase::loadConfig('database');
 		$db_charset = $database['default']['charset'];
 		if($this->db->version() > '4.1' && $db_charset) {
 			$sql = preg_replace("/TYPE=(InnoDB|MyISAM|MEMORY)( DEFAULT CHARSET=[^; ]+)?/", "ENGINE=\\1 DEFAULT CHARSET=".$db_charset,$sql);
@@ -607,9 +607,9 @@ EOF;
 	    while(false !== ($file = readdir($handle))) {
 	    	if($file != '.' && $file != '..'){ //排除"."和"."
 		        //生成源文件名
-			    $filefrom = $dirfrom.DIRECTORY_SEPARATOR.$file;
+			    $filefrom = $dirfrom.'/'.$file;
 		     	//生成目标文件名
-		        $fileto = $dirto.DIRECTORY_SEPARATOR.$file;
+		        $fileto = $dirto.'/'.$file;
 		        if(is_dir($filefrom)){ //如果是子目录，则进行递归操作
 		            $this->copydir($filefrom, $fileto, $cover);
 		        } else { //如果是文件，则直接用copy函数复制
@@ -642,7 +642,7 @@ EOF;
 	    $handle = opendir($dirname); //打开目录
 	    while(($file = readdir($handle)) !== false) {
 	        if($file != '.' && $file != '..'){ //排除"."和"."
-	            $dir = $dirname.DIRECTORY_SEPARATOR.$file;
+	            $dir = $dirname.'/'.$file;
 	            //$dir是目录时递归调用deletedir,是文件则直接删除
 	            is_dir($dir) ? $this->deletedir($dir) : unlink($dir);
 	        }

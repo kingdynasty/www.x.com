@@ -4,31 +4,31 @@
 		<h3 class="f14">phpsso<?php echo L('manage')?></h3>
 		<ul>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=member&a=manage&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=member&a=manage')?>" target="right"><?php echo L('member_manage')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Member&a=manage&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Member&a=manage')?>" target="right"><?php echo L('member_manage')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=applications&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=applications&a=init')?>" target="right"><?php echo L('application')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Applications&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Applications&a=init')?>" target="right"><?php echo L('application')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=messagequeue&a=manage&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=messagequeue&a=manage')?>" target="right"><?php echo L('communication')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Messagequeue&a=manage&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Messagequeue&a=manage')?>" target="right"><?php echo L('communication')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=credit&a=manage&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=credit&a=manage')?>" target="right"><?php echo L('redeem')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Credit&a=manage&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Credit&a=manage')?>" target="right"><?php echo L('redeem')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=administrator&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=administrator&a=init')?>" target="right"><?php echo L('administrator')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Administrator&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Administrator&a=init')?>" target="right"><?php echo L('administrator')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=system&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=system&a=init')?>" target="right"><?php echo L('system_setting')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=System&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=System&a=init')?>" target="right"><?php echo L('system_setting')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=cache&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=cache&a=init')?>" target="right"><?php echo L('update_phpsso_cache')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Cache&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Cache&a=init')?>" target="right"><?php echo L('update_phpsso_cache')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=password&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=password&a=init')?>" target="right"><?php echo L('change_password')?></a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Password&a=init&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Password&a=init')?>" target="right"><?php echo L('change_password')?></a>
 		</li>
 		<li class="sub_menu">
-		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=admin&c=login&a=logout&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=admin&c=member&a=manage')?>" target="right"><?php echo L('exit')?>phpsso</a>
+		<a style="outline: medium none;" hidefocus="true" href="<?php echo $setting['phpsso_api_url']?>/index.php?m=Admin&c=Login&a=logout&forward=<?php echo urlencode($setting['phpsso_api_url'].'/index.php?m=Admin&c=Member&a=manage')?>" target="right"><?php echo L('exit')?>phpsso</a>
 		</li>
 		</ul>
 		</div>

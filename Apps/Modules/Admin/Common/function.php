@@ -6,18 +6,18 @@
 	 * @param integer $disable 是否显示停用的{1:是,0:否}
 	 */
 	function template_list($siteid = '', $disable = 0) {
-		$list = glob(PC_PATH.'templates'.DIRECTORY_SEPARATOR.'*', GLOB_ONLYDIR);
+		$list = glob(APP_PATH.'Tpl/*', GLOB_ONLYDIR);
 		$arr = $template = array();
 		if ($siteid) {
-			$site = pc_base::load_app_class('sites','admin');
-			$info = $site->get_by_id($siteid);
+			$site = import('Sites');
+			$info = $site->getById($siteid);
 			if($info['template']) $template = explode(',', $info['template']);
 		}
 		foreach ($list as $key=>$v) {
 			$dirname = basename($v);
-			if ($siteid && !in_array($dirname, $template)) continue;
-			if (file_exists($v.DIRECTORY_SEPARATOR.'config.php')) {
-				$arr[$key] = include $v.DIRECTORY_SEPARATOR.'config.php';
+			if ($siteid && !in_array($dirname, $template)) continue;			
+			if (file_exists($v.'/config.php')) {
+				$arr[$key] = include $v.'/config.php';
 				if (!$disable && isset($arr[$key]['disable']) && $arr[$key]['disable'] == 1) {
 					unset($arr[$key]);
 					continue;
@@ -35,7 +35,7 @@
 	 * @param $filename 要配置的文件名称
 	 */
 	function set_config($config, $filename="system") {
-		$configfile = CACHE_PATH.'configs'.DIRECTORY_SEPARATOR.$filename.'.php';
+		$configfile = CACHE_PATH.'configs/'.$filename.'.php';
 		if(!is_writable($configfile)) showmessage('Please chmod '.$configfile.' to 0777 !');
 		$pattern = $replacement = array();
 		foreach($config as $k=>$v) {
@@ -48,7 +48,7 @@
 		}
 		$str = file_get_contents($configfile);
 		$str = preg_replace($pattern, $replacement, $str);
-		return pc_base::load_config('system','lock_ex') ? file_put_contents($configfile, $str, LOCK_EX) : file_put_contents($configfile, $str);		
+		return C('lock_ex') ? file_put_contents($configfile, $str, LOCK_EX) : file_put_contents($configfile, $str);		
 	}
 	
 	/**
@@ -91,7 +91,7 @@
 	function errorlog_size() {
 		$logfile = CACHE_PATH.'error_log.php';
 		if(file_exists($logfile)) {
-			return $logsize = pc_base::load_config('system','errorlog') ? round(filesize($logfile) / 1048576 * 100) / 100 : 0;
+			return $logsize = C('errorlog') ? round(filesize($logfile) / 1048576 * 100) / 100 : 0;
 		} 
 		return 0;
 	}

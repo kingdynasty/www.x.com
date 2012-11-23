@@ -1,13 +1,13 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header','admin');?>
+include Admin::adminTpl('header','admin');?>
 <div class="pad-10">
 <div class="bk10"></div>
 
 <div class="table-list">
 <table width="100%" cellspacing="0">
 
-<form action="?m=admin&c=category&a=batch_edit" method="post" name="myform">
+<form action="?m=Admin&c=Category&a=batchEdit" method="post" name="myform">
 <tbody  height="200" class="nHover td-line">
 	<tr> 
       <td align="left" rowspan="6">

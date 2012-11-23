@@ -46,14 +46,15 @@ class LocationTemplateBehavior extends Behavior {
             $path   =  explode(':',$templateFile);
             $action = array_pop($path);
             $controler = !empty($path)?array_pop($path):CONTROLER_NAME;
-            $moduel = !empty($path)?array_pop($path):MODULE_NAME;//TODO
+            $module = !empty($path)?array_pop($path):MODULE_NAME;//TODO
             if(!empty($path)) {// 设置模板主题
                 $path = dirname(THEME_PATH).'/'.array_pop($path).'/';
             }else{
                 $path = THEME_PATH;
             }
             $depr = defined('MODULE_NAME')?C('TMPL_FILE_DEPR'):'/';
-            $templateFile  =  $path.$moduel.$depr.$action.C('TMPL_TEMPLATE_SUFFIX');//TODO
+            $templateFile  =  $path.$module.$depr.$action.C('TMPL_TEMPLATE_SUFFIX');//TODO
+            //$templateFile  =  $path.$module.C('TMPL_FILE_DEPR').$action.C('TMPL_TEMPLATE_SUFFIX');
             //dump($controler.$depr.$action.C('TMPL_TEMPLATE_SUFFIX'));
         }
         if(!file_exists_case($templateFile))

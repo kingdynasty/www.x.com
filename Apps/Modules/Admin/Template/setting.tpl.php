@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript">
 <!--
 	$(function(){
@@ -23,7 +23,7 @@ include $this->admin_tpl('header');?>
 	})
 //-->
 </script>
-<form action="?m=admin&c=setting&a=save" method="post" id="myform">
+<form action="?m=Admin&c=Setting&a=save" method="post" id="myform">
 <div class="pad-10">
 <div class="col-tab">
 <ul class="tabBut cu-li">
@@ -255,7 +255,7 @@ function showsmtp(obj,hiddenid){
 function test_mail() {
 	var mail_type = $('input[checkbox=mail_type][checked]').val();
 	var mail_auth = $('input[checkbox=mail_auth][checked]').val();
-    $.post('?m=admin&c=setting&a=public_test_mail&mail_to='+$('#mail_to').val(),{mail_type:mail_type,mail_server:$('#mail_server').val(),mail_port:$('#mail_port').val(),mail_user:$('#mail_user').val(),mail_password:$('#mail_password').val(),mail_auth:mail_auth,mail_from:$('#mail_from').val()}, function(data){
+    $.post('?m=Admin&c=Setting&a=publicTestMail&mail_to='+$('#mail_to').val(),{mail_type:mail_type,mail_server:$('#mail_server').val(),mail_port:$('#mail_port').val(),mail_user:$('#mail_user').val(),mail_password:$('#mail_password').val(),mail_auth:mail_auth,mail_from:$('#mail_from').val()}, function(data){
 	alert(data);
 	});
 }

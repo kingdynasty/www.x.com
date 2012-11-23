@@ -80,9 +80,9 @@ class App {
         if(C('var_filters')) {
             $filters    =   explode(',',C('var_filters'));
             foreach($filters as $filter){
-                // 全局参数过滤
-                $_POST  =   array_map($filter,$_POST);
-                $_GET   =   array_map($filter,$_GET);
+            // 全局参数过滤
+                array_walk_recursive($_POST,$filter);
+                array_walk_recursive($_GET,$filter);
             }
         }
 
@@ -96,9 +96,10 @@ class App {
                 $templateSet = cookie('think_template');
             }
             // 主题不存在时仍改回使用默认主题
-            if(!is_dir(TMPL_PATH.$templateSet))
-                $templateSet = C('DEFAULT_THEME');
-            cookie('think_template',$templateSet);
+            if(!in_array($templateSet,explode(',',C('THEME_LIST')))){
+                $templateSet =  C('DEFAULT_THEME');
+            }
+            cookie('think_template',$templateSet,864000);
         }
         /* 模板相关目录常量 */
         define('THEME_NAME',   $templateSet);                  // 当前模板主题名称

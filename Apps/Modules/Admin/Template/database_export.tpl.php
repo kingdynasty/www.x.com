@@ -1,9 +1,9 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <div class="pad_10">
 <div class="table-list">
-<form method="post" name="myform" id="myform" action="?m=admin&c=database&a=export">
+<form method="post" name="myform" id="myform" action="?m=Admin&c=Database&a=export">
 <input type="hidden" name="tabletype" value="phpcmstables" id="phpcmstables">
 <table width="100%" cellspacing="0">
 <thead>
@@ -25,7 +25,7 @@ include $this->admin_tpl('header');?>
   	</tr>
   	<tr>
 	    <td class="align_r"><?php echo L('select_pdo')?></td>
-	    <td colspan=3><?php echo form::select($pdos,$pdo_name,'name="pdo_select" onchange="show_tbl(this)"',L('select_pdo'))?></td>
+	    <td colspan=3><?php echo Form::select($pdos,$pdo_name,'name="pdo_select" onchange="show_tbl(this)"',L('select_pdo'))?></td>
   	</tr>
   	<tr>
 	    <td></td>
@@ -59,7 +59,7 @@ if(is_array($infos)){
 	<td  width="15%" align="center"><?php echo $v['rows']?></td>
 	<td  width="15%" align="center"><?php echo $v['size']?></td>
 	<td  width="15%" align="center"><?php echo $v['data_free']?></td>
-	<td  width="15%" align="center"><a href="?m=admin&c=database&a=public_repair&operation=optimize&pdo_name=<?php echo $pdo_name?>&tables=<?php echo $v['name']?>"><?php echo L('database_optimize')?></a> | <a href="?m=admin&c=database&a=public_repair&operation=repair&pdo_name=<?php echo $pdo_name?>&tables=<?php echo $v['name']?>"><?php echo L('database_repair')?></a> | <a href="javascript:void(0);" onclick="showcreat('<?php echo $v['name']?>','<?php echo $pdo_name?>')"><?php echo L('database_showcreat')?></a></td>
+	<td  width="15%" align="center"><a href="?m=Admin&c=Database&a=publicRepair&operation=optimize&pdo_name=<?php echo $pdo_name?>&tables=<?php echo $v['name']?>"><?php echo L('database_optimize')?></a> | <a href="?m=Admin&c=Database&a=publicRepair&operation=repair&pdo_name=<?php echo $pdo_name?>&tables=<?php echo $v['name']?>"><?php echo L('database_repair')?></a> | <a href="javascript:void(0);" onclick="showcreat('<?php echo $v['name']?>','<?php echo $pdo_name?>')"><?php echo L('database_showcreat')?></a></td>
 	</tr>
 	<?php } ?>
 	</tbody>
@@ -73,8 +73,8 @@ if(is_array($infos)){
 <div class="btn">
 <label for="check_box"><?php echo L('select_all')?>/<?php echo L('cancel')?></label>
 <input type="button" class="button" onclick="reselect()" value="<?php echo L('reselect')?>"/>
-<input type="submit" class="button" name="dosubmit" onclick="document.myform.action='?m=admin&c=database&a=public_repair&operation=optimize&pdo_name=<?php echo $pdo_name?>'" value="<?php echo L('batch_optimize')?>"/>
-<input type="submit" class="button" name="dosubmit" onclick="document.myform.action='?m=admin&c=database&a=public_repair&operation=repair&pdo_name=<?php echo $pdo_name?>'" value="<?php echo L('batch_repair')?>"/>
+<input type="submit" class="button" name="dosubmit" onclick="document.myform.action='?m=Admin&c=Database&a=publicRepair&operation=optimize&pdo_name=<?php echo $pdo_name?>'" value="<?php echo L('batch_optimize')?>"/>
+<input type="submit" class="button" name="dosubmit" onclick="document.myform.action='?m=Admin&c=Database&a=publicRepair&operation=repair&pdo_name=<?php echo $pdo_name?>'" value="<?php echo L('batch_repair')?>"/>
 </div>
 <?php 
 }
@@ -88,10 +88,10 @@ if(is_array($infos)){
 <!--
 function show_tbl(obj) {
 	var pdoname = $(obj).val();
-	location.href='?m=admin&c=database&a=export&pdoname='+pdoname+'&pc_hash=<?php echo $_SESSION['pc_hash']?>';
+	location.href='?m=Admin&c=Database&a=export&pdoname='+pdoname+'&pc_hash=<?php echo $_SESSION['pc_hash']?>';
 }
 function showcreat(tblname, pdo_name) {
-	window.top.art.dialog({title:tblname, id:'show', iframe:'?m=admin&c=database&a=public_repair&operation=showcreat&pdo_name='+pdo_name+'&tables=' +tblname,width:'500px',height:'350px'});
+	window.top.art.dialog({title:tblname, id:'show', iframe:'?m=Admin&c=Database&a=publicRepair&operation=showcreat&pdo_name='+pdo_name+'&tables=' +tblname,width:'500px',height:'350px'});
 }
 function reselect() {
 	var chk = $("input[name=tables[]]");

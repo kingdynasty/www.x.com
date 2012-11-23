@@ -4,30 +4,30 @@
  * @author chenzhouyu
  *
  */
-class sites {
+class Sites {
 	//数据库连接
 	private $db;
 	public function __construct() {
-		$this->db = pc_base::load_model('site_model');
+		$this->db = M('Site');
 	}
 	
 	/**
 	 * 获取站点列表
 	 * @param string $roleid 角色ID 留空为获取所有站点列表
 	 */
-	public function get_list($roleid='') {
+	public function getList($roleid='') {
 		$roleid = intval($roleid);
 		if(empty($roleid)) {
-			if ($data = getcache('sitelist', 'commons')) {
+			if ($data = cache('sitelist', 'Commons')) {
 				return $data;
 			} else {
-				$this->set_cache();
+				$this->setCache();
 				return $this->db->select();
 			}			
 		} else {
-			$site_arr = $this->get_role_siteid($roleid);
+			$site_arr = $this->getRoleSiteid($roleid);
 			$sql = "`siteid` in($site_arr)";
-			return $this->db->select($sql);
+			return $this->db->pcSelect($sql);
 		}
 
 	}
@@ -36,28 +36,28 @@ class sites {
 	 * 按ID获取站点信息
 	 * @param integer $siteid 站点ID号
 	 */
-	public function get_by_id($siteid) {
+	public function getById($siteid) {
 		return siteinfo($siteid);
 	}
 	
 	/**
 	 * 设置站点缓存
 	 */
-	public function set_cache() {
+	public function setCache() {
 		$list = $this->db->select();
 		$data = array();
 		foreach ($list as $key=>$val) {
 			$data[$val['siteid']] = $val;
-			$data[$val['siteid']]['url'] = $val['domain'] ? $val['domain'] : pc_base::load_config('system', 'web_path').$val['dirname'].'/';
+			$data[$val['siteid']]['url'] = $val['domain'] ? $val['domain'] : C('site_path').$val['dirname'].'/';
 		}
-		setcache('sitelist', $data, 'commons');
+		cache('sitelist', $data, 'Commons');
 	}
 	
 	/**
 	 * PC标签中调用站点列表
 	 */
-	public function pc_tag_list() {
-		$list = $this->db->select('', 'siteid,name');
+	public function pcTagList() {
+		$list = $this->db->pcSelect('', 'siteid,name');
 		$sitelist = array(''=>L('please_select_a_site', '', 'admin'));
 		foreach ($list as $k=>$v) {
 			$sitelist[$v['siteid']] = $v['name'];
@@ -70,15 +70,15 @@ class sites {
 	 * @param string $roleid 角色ID
 	 */	
 	
-	public function get_role_siteid($roleid) {
+	public function getRoleSiteid($roleid) {
 		$roleid = intval($roleid);
 		if($roleid == 1) {
-			$sitelists = $this->get_list();
+			$sitelists = $this->getList();
 			foreach($sitelists as $v) {
 				$sitelist[] = $v['siteid'];
 			}
 		} else {
-			$sitelist = getcache('role_siteid', 'commons');
+			$sitelist = cache('role_siteid', 'Commons');
 			$sitelist = $sitelist[$roleid];
 		}
 		if(is_array($sitelist)) 
@@ -86,7 +86,7 @@ class sites {
 			$siteid = implode(',',array_unique($sitelist));
 			return $siteid;			
 		} else {
-			showmessage(L('no_site_permissions'),'?m=admin&c=index&a=login');
+			showmessage(L('no_site_permissions'),'?m=Admin&c=Index&a=login');
 		}
 	}
 }

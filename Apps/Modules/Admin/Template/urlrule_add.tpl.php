@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 <script type="text/javascript">
 <!--
@@ -22,14 +22,14 @@ include $this->admin_tpl('header');
 </style>
 <div class="pad_10">
 <table width="100%" cellpadding="2" cellspacing="1" class="table_form">
-<form action="?m=admin&c=urlrule&a=add" method="post" name="myform" id="myform">
+<form action="?m=Admin&c=Urlrule&a=add" method="post" name="myform" id="myform">
 	<tr> 
       <th width="20%"><?php echo L('urlrule_file')?> :</th>
       <td><input type="text" name="info[file]" id="file" size="20"></td>
     </tr>
 	<tr> 
       <th width="20%"><?php echo L('urlrule_module')?> :</th>
-      <td><?php echo form::select($modules,'content',"name='info[module]' id='module'");?></td>
+      <td><?php echo Form::select($modules,'content',"name='info[module]' id='module'");?></td>
     </tr>
 	<tr> 
       <th width="20%"><?php echo L('urlrule_ishtml')?> :</th>

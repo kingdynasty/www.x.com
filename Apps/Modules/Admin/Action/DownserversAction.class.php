@@ -1,13 +1,13 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
-pc_base::load_sys_class('form', '', 0);
+import('Admin','',0);
+vendor('Pc.Form');
 class DownserversAction extends BaseAction {
 	private $db;
 	function __construct() {
 		parent::__construct();
-		$this->db = pc_base::load_model('downservers_model');
-		$this->sites = pc_base::load_app_class('sites');
+		$this->db = M('Downservers');
+		$this->sites = import('Sites');
 	}
 	
 	public function init() {
@@ -17,7 +17,7 @@ class DownserversAction extends BaseAction {
 			$info['siteid'] = intval($_POST['info']['siteid']);
 			if(empty($info['sitename'])) showmessage(L('downserver_not_empty'), HTTP_REFERER);	
 			if(empty($info['siteurl']) || !preg_match('/(\w+):\/\/(.+)[^\/]$/i', $info['siteurl'])) showmessage(L('downserver_error'), HTTP_REFERER);
-			$insert_id = $this->db->insert($info,true);
+			$insert_id = $this->db->data($info)->add();
 			if($insert_id){
 				$this->_set_cache();
 				showmessage(L('operation_success'), HTTP_REFERER);
@@ -26,7 +26,7 @@ class DownserversAction extends BaseAction {
 			$infos =  $sitelist = array();
 			$current_siteid = get_siteid();
 			$where = "`siteid`='$current_siteid' or `siteid`=''";
-			$sitelists = $this->sites->get_list();
+			$sitelists = $this->sites->getList();
 			if($_SESSION['roleid'] == '1') {
 				foreach($sitelists as $key=>$v) $sitelist[$key] = $v['name'];
 				$default = L('all_site');
@@ -35,9 +35,9 @@ class DownserversAction extends BaseAction {
 				$default = '';
 			}			
 			$page = $_GET['page'] ? $_GET['page'] : '1';
-			$infos = $this->db->listinfo($where, 'listorder DESC,id DESC', $page, $pagesize = 20);
+			$infos = $this->db->where($where)->order('listorder DESC,id DESC')->page($page, $pagesize = 20)->select();
 			$pages = $this->db->pages;						
-			include $this->admin_tpl('downservers_list');
+			include Admin::adminTpl('downservers_list');
 		}
 	}
 	
@@ -50,31 +50,31 @@ class DownserversAction extends BaseAction {
 			if(empty($info['siteurl']) || !preg_match('/(\w+):\/\/(.+)[^\/]$/i', $info['siteurl'])) showmessage(L('downserver_error'), HTTP_REFERER);
 			$id = intval(trim($_POST['id']));
 			$this->_set_cache();
-			$this->db->update($info,array('id'=>$id));
+			$this->db->data($info)->where(array('id'=>$id))->save();
 			showmessage(L('operation_success'), '', '', 'edit');
 		} else {
 			$info =  $sitelist = array();
 			$default = '';
-			$sitelists = $this->sites->get_list();
+			$sitelists = $this->sites->getList();
 			if($_SESSION['roleid'] == '1') {
 				foreach($sitelists as $key=>$v) $sitelist[$key] = $v['name'];
 				$default = L('all_site');
 			} else {
-				$current_siteid = self::get_siteid();
+				$current_siteid = Admin::getSiteid();
 				$sitelist[$current_siteid] = $sitelists[$current_siteid]['name'];
 				$default = '';
 			}			
-			$info = $this->db->get_one(array('id'=>intval($_GET['id'])));
+			$info = $this->db->where(array('id'=>intval($_GET['id'])))->find();
 			extract($info);
 			$show_validator = true;
 			$show_header = true;
-			include $this->admin_tpl('downservers_edit');
+			include Admin::adminTpl('downservers_edit');
 		}
 	}
 	
 	public function delete() {
 		$id = intval($_GET['id']);
-		$this->db->delete(array('id'=>$id));
+		$this->db->where(array('id'=>$id))->delete();
 		$this->_set_cache();
 		showmessage(L('downserver_del_success'), HTTP_REFERER);
 	}	
@@ -85,7 +85,7 @@ class DownserversAction extends BaseAction {
 	public function listorder() {
 		if(isset($_POST['dosubmit'])) {
 			foreach($_POST['listorders'] as $id => $listorder) {
-				$this->db->update(array('listorder'=>$listorder),array('id'=>$id));
+				$this->db->data(array('listorder'=>$listorder))->where(array('id'=>$id))->save();
 			}
 			showmessage(L('operation_success'), HTTP_REFERER);
 		} else {
@@ -98,7 +98,7 @@ class DownserversAction extends BaseAction {
 		foreach ($infos as $info){
 			$servers[$info['id']] = $info;
 		}
-		setcache('downservers', $servers,'commons');
+		cache('downservers', $servers,'Commons');
 		return $infos;
 	}
 	

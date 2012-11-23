@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript">
   $(document).ready(function() {
 	$.formValidator.initConfig({autotip:true,formid:"myform",onerror:function(msg){}});
@@ -9,14 +9,14 @@ include $this->admin_tpl('header');?>
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=linkage&a=edit" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=Linkage&a=edit" method="post" id="myform">
 <table width="100%" class="table_form contentWrap">
 <?php
 if(isset($_GET['parentid'])) { ?>
 <tr>
   <td><?php echo L('linkage_parent_menu')?></td>
   <td>
-<?php echo form::select_linkage($info['keyid'], 0, 'info[parentid]', 'parentid', L('cat_empty'), $_GET['parentid'])?>
+<?php echo Form::selectLinkage($info['keyid'], 0, 'info[parentid]', 'parentid', L('cat_empty'), $_GET['parentid'])?>
   </td>
   </tr>
   <?php } ?>
@@ -50,7 +50,7 @@ if(isset($_GET['parentid'])) { ?>
 <tr>
 <td><?php echo L('site_select')?></td>
 <td>
-<?php echo form::select($sitelist,$siteid,'name="info[siteid]"',L('all_site'))?><input type="hidden" name="linkageid" value="<?php echo $linkageid?>">
+<?php echo Form::select($sitelist,$siteid,'name="info[siteid]"',L('all_site'))?><input type="hidden" name="linkageid" value="<?php echo $linkageid?>">
 	<input type="hidden" name="info[keyid]" value="<?php echo $keyid?>">
     <input name="dosubmit" type="submit" value="<?php echo L('submit')?>" class="dialog" id="dosubmit">
 </td>

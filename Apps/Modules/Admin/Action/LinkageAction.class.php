@@ -1,14 +1,14 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 set_time_limit(0);
 class LinkageAction extends BaseAction {
 	private $db;
 	function __construct() {
 		parent::__construct();
-		$this->db = pc_base::load_model('linkage_model');
-		$this->sites = pc_base::load_app_class('sites');
-		pc_base::load_sys_class('form', '', 0);
+		$this->db = M('Linkage');
+		$this->sites = import('Sites');
+		vendor('Pc.Form');
 		$this->childnode = array();
 	}
 	
@@ -18,8 +18,8 @@ class LinkageAction extends BaseAction {
 	public function init() {
 		$where = array('keyid'=>0);
 		$infos = $this->db->select($where);
-		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=admin&c=linkage&a=add\', title:\''.L('linkage_add').'\', width:\'500\', height:\'220\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('linkage_add'));
-		include $this->admin_tpl('linkage_list');
+		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=Admin&c=Linkage&a=add\', title:\''.L('linkage_add').'\', width:\'500\', height:\'220\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('linkage_add'));
+		include Admin::adminTpl('linkage_list');
 	}
 	
 	/**
@@ -32,19 +32,18 @@ class LinkageAction extends BaseAction {
 			$info['description'] = trim($_POST['info']['description']);
 			$info['style'] = trim(intval($_POST['info']['style']));
 			$info['siteid'] = trim(intval($_POST['info']['siteid']));
-			$this->db->insert($info);
-			$insert_id = $this->db->insert_id();
+			$insert_id = $this->db->data($info)->add();
 			if($insert_id){
 				showmessage(L('operation_success'), '', '', 'add');
 			}
 		} else {
 			$show_header = true;
 			$show_validator = true;
-			$sitelist = $this->sites->get_list();
+			$sitelist = $this->sites->getList();
 			foreach($sitelist as $siteid=>$v) {
 				$sitelist[$siteid] = $v['name'];
 			}
-			include $this->admin_tpl('linkage_add');
+			include Admin::adminTpl('linkage_add');
 		}
 
 	}
@@ -62,21 +61,21 @@ class LinkageAction extends BaseAction {
 			$info['setting'] = array2string(array('level'=>intval($_POST['info']['level'])));
 			if($_POST['info']['keyid']) $info['keyid'] = trim($_POST['info']['keyid']);
 			if($_POST['info']['parentid']) $info['parentid'] = trim($_POST['info']['parentid']);
-			$this->db->update($info,array('linkageid'=>$linkageid));
+			$this->db->data($info)->where(array('linkageid'=>$linkageid))->save();
 			$id = $info['keyid'] ? $info['keyid'] : $linkageid;
 			showmessage(L('operation_success'), '', '', 'edit');			
 		} else {
 			$linkageid = intval($_GET['linkageid']);
-			$info = $this->db->get_one(array('linkageid'=>$linkageid));
+			$info = $this->db->where(array('linkageid'=>$linkageid))->find();
 			extract($info);	
 			$setting = string2array($setting);
-			$sitelist = $this->sites->get_list();
+			$sitelist = $this->sites->getList();
 			foreach($sitelist as $id=>$v) {
 				$sitelist[$id] = $v['name'];
 			}
 			$show_header = true;
 			$show_validator = true;
-			include $this->admin_tpl('linkage_edit');
+			include Admin::adminTpl('linkage_edit');
 		}
 		
 	}
@@ -89,7 +88,7 @@ class LinkageAction extends BaseAction {
 		$this->_get_childnode($linkageid);
 		if(is_array($this->childnode)){
 			foreach($this->childnode as $linkageid_tmp) {
-				$this->db->delete(array('linkageid' => $linkageid_tmp));
+				$this->db->where(array('linkageid' => $linkageid_tmp))->delete();
 			}
 		}
 		$this->db->delete(array('keyid' => $linkageid));
@@ -98,7 +97,7 @@ class LinkageAction extends BaseAction {
 		showmessage(L('operation_success'));	
 	}
 	
-	public function public_cache() {
+	public function publicCache() {
 		$linkageid = intval($_GET['linkageid']);
 		$this->_cache($linkageid);
 		showmessage(L('operation_success'));
@@ -106,34 +105,34 @@ class LinkageAction extends BaseAction {
 	/**
 	 * 菜单排序
 	 */
-	public function public_listorder() {
+	public function publicListorder() {
 		if(!is_array($_POST['listorders'])) return FALSE;
 		foreach($_POST['listorders'] as $linkageid=>$value)
 		{
 			$value = intval($value);
-			$this->db->update(array('listorder'=>$value),array('linkageid'=>$linkageid));
+			$this->db->data(array('listorder'=>$value))->where(array('linkageid'=>$linkageid))->save();
 		}
 		$id = intval($_POST['keyid']);
-		showmessage(L('operation_success'),'?m=admin&c=linkage&a=init');
+		showmessage(L('operation_success'),'?m=Admin&c=Linkage&a=init');
 	}
 
 	/**
 	 * 管理联动菜单子菜单
 	 */
-	public function public_manage_submenu() {
+	public function publicManageSubmenu() {
 		$keyid = isset($_GET['keyid']) && trim($_GET['keyid']) ? trim($_GET['keyid']) : showmessage(L('linkage_parameter_error'));
-		$tree = pc_base::load_sys_class('tree');
+		$tree = vendor('Pc.Tree','',1);
 		$tree->icon = array('&nbsp;&nbsp;&nbsp;│ ','&nbsp;&nbsp;&nbsp;├─ ','&nbsp;&nbsp;&nbsp;└─ ');
 		$tree->nbsp = '&nbsp;&nbsp;&nbsp;';
-		$sum = $this->db->count(array('keyid'=>$keyid));
+		$sum = $this->db->where(array('keyid'=>$keyid))->count();
 		$sql_parentid = $_GET['parentid'] ? trim($_GET['parentid']) : 0;
 		$where = $sum > 40 ? array('keyid'=>$keyid,'parentid'=>$sql_parentid) : array('keyid'=>$keyid);
-		$result = $this->db->select($where,'*','','listorder ,linkageid');
+		$result = $this->db->where($where)->order('listorder ,linkageid')->select();
 
 		foreach($result as $areaid => $area){
 			$areas[$area['linkageid']] = array('id'=>$area['linkageid'],'parentid'=>$area['parentid'],'name'=>$area['name'],'listorder'=>$area['listorder'],'style'=>$area['style'],'mod'=>$mod,'file'=>$file,'keyid'=>$keyid,'description'=>$area['description']);
-			$areas[$area['linkageid']]['str_manage'] = ($sum > 40 && $this->_is_last_node($area['keyid'],$area['linkageid'])) ? '<a href="?m=admin&c=linkage&a=public_manage_submenu&keyid='.$area['keyid'].'&parentid='.$area['linkageid'].'">'.L('linkage_manage_submenu').'</a> | ' : '';
-			$areas[$area['linkageid']]['str_manage'] .= '<a href="javascript:void(0);" onclick="add(\''.$keyid.'\',\''.new_addslashes($area['name']).'\',\''.$area['linkageid'].'\')">'.L('linkage_add_submenu').'</a> | <a href="javascript:void(0);" onclick="edit(\''.$area['linkageid'].'\',\''.$area['name'].'\',\''.$area['parentid'].'\')">'.L('edit').'</a> | <a href="javascript:confirmurl(\'?m=admin&c=linkage&a=delete&linkageid='.$area['linkageid'].'&keyid='.$area['keyid'].'\', \''.L('linkage_is_del').'\')">'.L('delete').'</a> ';
+			$areas[$area['linkageid']]['str_manage'] = ($sum > 40 && $this->_is_last_node($area['keyid'],$area['linkageid'])) ? '<a href="?m=Admin&c=Linkage&a=publicManageSubmenu&keyid='.$area['keyid'].'&parentid='.$area['linkageid'].'">'.L('linkage_manage_submenu').'</a> | ' : '';
+			$areas[$area['linkageid']]['str_manage'] .= '<a href="javascript:void(0);" onclick="add(\''.$keyid.'\',\''.new_addslashes($area['name']).'\',\''.$area['linkageid'].'\')">'.L('linkage_add_submenu').'</a> | <a href="javascript:void(0);" onclick="edit(\''.$area['linkageid'].'\',\''.$area['name'].'\',\''.$area['parentid'].'\')">'.L('edit').'</a> | <a href="javascript:confirmurl(\'?m=Admin&c=Linkage&a=delete&linkageid='.$area['linkageid'].'&keyid='.$area['keyid'].'\', \''.L('linkage_is_del').'\')">'.L('delete').'</a> ';
 		}
 		
 		$str  = "<tr>
@@ -144,15 +143,15 @@ class LinkageAction extends BaseAction {
 					<td align='center'>\$str_manage</td>
 				</tr>";
 		$tree->init($areas);
-		$submenu = $tree->get_tree($sql_parentid, $str);
-		$big_menu =array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=admin&c=linkage&a=public_sub_add&keyid='.$keyid.'\', title:\''.L('linkage_add').'\', width:\'500\', height:\'430\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('linkage_add'));		
-		include $this->admin_tpl('linkage_submenu');
+		$submenu = $tree->getTree($sql_parentid, $str);
+		$big_menu =array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=Admin&c=Linkage&a=publicSubAdd&keyid='.$keyid.'\', title:\''.L('linkage_add').'\', width:\'500\', height:\'430\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('linkage_add'));		
+		include Admin::adminTpl('linkage_submenu');
 	}
 	
 	/**
 	 * 子菜单添加
 	 */
-	public function public_sub_add() {		
+	public function publicSubAdd() {		
 		if(isset($_POST['dosubmit'])) {
 			$info = array();
 			$info['keyid'] = isset($_POST['keyid']) && trim($_POST['keyid']) ? trim(intval($_POST['keyid'])) : showmessage(L('linkage_parameter_error'));
@@ -165,23 +164,23 @@ class LinkageAction extends BaseAction {
 				$name = trim($name);
 				if(!$name) continue;
 				$info['name'] = $name;
-				$this->db->insert($info);
+				$insertid = $this->db->data($info)->add();
 			}		
-			if($this->db->insert_id()){
+			if($insertid){//TODO insertId
 				showmessage(L('operation_success'), '', '', 'add');
 			}
 		} else {
 			$keyid = $_GET['keyid'];
 			$linkageid = $_GET['linkageid'];
-			$list = form::select_linkage($keyid,'0','info[parentid]', 'parentid', L('cat_empty'), $linkageid);
+			$list = Form::selectLinkage($keyid,'0','info[parentid]', 'parentid', L('cat_empty'), $linkageid);
 			$show_validator = true;
-			include $this->admin_tpl('linkage_sub_add');			
+			include Admin::adminTpl('linkage_sub_add');			
 		}
 	}
-	public function ajax_getlist() {
+	public function ajaxGetlist() {
 
 		$keyid = intval($_GET['keyid']);
-		$datas = getcache($keyid,'linkage');
+		$datas = cache($keyid,'linkage');
 		$infos = $datas['data'];
 		$where_id = isset($_GET['parentid']) ? $_GET['parentid'] : intval($infos[$_GET['linkageid']]['parentid']);
 		$parent_menu_name = ($where_id==0) ? $datas['title'] :$infos[$where_id]['name'];
@@ -205,13 +204,13 @@ class LinkageAction extends BaseAction {
 	private function _cache($linkageid) {
 		$linkageid = intval($linkageid);
 		$info = array();
-		$r = $this->db->get_one(array('linkageid'=>$linkageid),'name,siteid,style,keyid,setting');
+		$r = $this->db->where(array('linkageid'=>$linkageid))->field('name,siteid,style,keyid,setting')->find();
 		$info['title'] = $r['name'];
 		$info['style'] = $r['style'];
 		$info['setting'] = string2array($r['setting']);
 		$info['siteid'] = $r['siteid'];
 		$info['data'] = $this->submenulist($linkageid);
-		setcache($linkageid, $info,'linkage');
+		cache($linkageid, $info,'linkage');
 		return $info;
 	}
 	
@@ -231,12 +230,12 @@ class LinkageAction extends BaseAction {
 		$keyid = intval($keyid);
 		$datas = array();
 		$where = ($keyid > 0) ? array('keyid'=>$keyid) : '';
-		$result = $this->db->select($where,'*','','listorder ,linkageid');	
+		$result = $this->db->pcSelect($where,'*','','listorder ,linkageid');	
 		if(is_array($result)) {
 			foreach($result as $r) {
-				$arrchildid = $r['arrchildid'] = $this->get_arrchildid($r['linkageid'],$result);				
+				$arrchildid = $r['arrchildid'] = $this->getArrchildid($r['linkageid'],$result);				
 				$child = $r['child'] =  is_numeric($arrchildid) ? 0 : 1;
-				$this->db->update(array('child'=>$child,'arrchildid'=>$arrchildid),array('linkageid'=>$r['linkageid']));			
+				$this->db->data(array('child'=>$child,'arrchildid'=>$arrchildid))->where(array('linkageid'=>$r['linkageid']))->save();			
 				$datas[$r['linkageid']] = $r;
 			}
 		}
@@ -249,7 +248,7 @@ class LinkageAction extends BaseAction {
 	 */
 	private function _get_belong_siteid($keyid) {
 		$keyid = intval($keyid);
-		$info = $this->db->get_one(array('linkageid'=>$keyid));
+		$info = $this->db->where(array('linkageid'=>$keyid))->find();
 		return $info ? $info['siteid'] : false;
 	}
 
@@ -276,10 +275,10 @@ class LinkageAction extends BaseAction {
 	/**
 	 * 返回菜单ID
 	 */
-	public function public_get_list() {
+	public function publicGetList() {
 		$where = array('keyid'=>0);
-		$infos = $this->db->select($where);
-		include $this->admin_tpl('linkage_get_list');
+		$infos = $this->db->where($where)->select();
+		include Admin::adminTpl('linkage_get_list');
 	}
 	
 	/**
@@ -287,12 +286,12 @@ class LinkageAction extends BaseAction {
 	 * @param $linkageid 联动菜单id
 	 * @param $linkageinfo
 	 */
-	private function get_arrchildid($linkageid,$linkageinfo) {
+	private function getArrchildid($linkageid,$linkageinfo) {
 		$arrchildid = $linkageid;
 		if(is_array($linkageinfo)) {
 			foreach($linkageinfo as $linkage) {
 				if($linkage['parentid'] && $linkage['linkageid'] != $linkageid && $linkage['parentid']== $linkageid) 	{
-					$arrchildid .= ','.$this->get_arrchildid($linkage['linkageid'],$linkageinfo);
+					$arrchildid .= ','.$this->getArrchildid($linkage['linkageid'],$linkageinfo);
 	
 				}
 			}

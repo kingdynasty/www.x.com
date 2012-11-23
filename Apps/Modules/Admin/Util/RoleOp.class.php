@@ -1,21 +1,19 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
 
-//定义在后台
-define('IN_ADMIN',true);
-class role_op {	
+class RoleOp {	
 	public function __construct() {
-		$this->db = pc_base::load_model('admin_role_model');
-		$this->priv_db = pc_base::load_model('admin_role_priv_model');
+		$this->db = M('AdminRole');
+		$this->privDb = M('AdminRolePriv');
 	}
 	/**
 	 * 获取角色中文名称
 	 * @param int $roleid 角色ID
 	 */
-	public function get_rolename($roleid) {
+	public function getRolename($roleid) {
 		$roleid = intval($roleid);
 		$search_field = '`roleid`,`rolename`';
-		$info = $this->db->get_one(array('roleid'=>$roleid),$search_field);
+		$info = $this->db->where(array('roleid'=>$roleid))->field($search_field)->find();
 		return $info;
 	}
 		
@@ -24,7 +22,7 @@ class role_op {
 	 * @param $name 角色组名称
 	 */
 	public function checkname($name) {
-		$info = $this->db->get_one(array('rolename'=>$name),'roleid');
+		$info = $this->db->where(array('rolename'=>$name))->field('roleid')->find();
 		if($info[roleid]){
 			return true;
 		}
@@ -36,7 +34,7 @@ class role_op {
 	 * @param int $menuid 菜单ID
 	 * @param int $menu_info 菜单数据
 	 */
-	public function get_menuinfo($menuid,$menu_info) {
+	public function getMenuinfo($menuid,$menu_info) {
 		$menuid = intval($menuid);
 		unset($menu_info[$menuid][id]);
 		return $menu_info[$menuid];
@@ -47,7 +45,7 @@ class role_op {
 	 * @param array $data menu表中数组
 	 * @param int $roleid 需要检查的角色ID
 	 */
-	public function is_checked($data,$roleid,$siteid,$priv_data) {
+	public function isChecked($data,$roleid,$siteid,$priv_data) {
 		$priv_arr = array('m','c','a','data');
 		if($data['m'] == '') return false;
 		foreach($data as $key=>$value){
@@ -66,11 +64,11 @@ class role_op {
 	/**
 	 * 是否为设置状态
 	 */
-	public function is_setting($siteid,$roleid) {
+	public function isSetting($siteid,$roleid) {
 		$siteid = intval($siteid);
 		$roleid = intval($roleid);
 		$sqls = "`siteid`='$siteid' AND `roleid` = '$roleid' AND `m` != ''";
-		$result = $this->priv_db->get_one($sqls);
+		$result = $this->privDb->where($sqls)->find();
 		return $result ? true : false;
 	}
 	/**
@@ -79,13 +77,13 @@ class role_op {
 	 * @param $array
 	 * @param $i
 	 */
-	public function get_level($id,$array=array(),$i=0) {
+	public function getLevel($id,$array=array(),$i=0) {
 		foreach($array as $n=>$value){
 			if($value['id'] == $id)
 			{
 				if($value['parentid']== '0') return $i;
 				$i++;
-				return $this->get_level($value['parentid'],$array,$i);
+				return $this->getLevel($value['parentid'],$array,$i);
 			}
 		}
 	}

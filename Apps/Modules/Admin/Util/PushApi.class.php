@@ -9,11 +9,11 @@
 
 defined('APP_NAME') or exit('No permission resources.');
 
-class push_api {
- 	private $db, $pos_data; //数据调用属性
+class PushApi {
+ 	private $db, $posData; //数据调用属性
 
 	public function __construct() {
-		$this->db = pc_base::load_model('position_model');  //加载数据模型
+		$this->db = M('Position');  //加载数据模型
 	}
 
 	/**
@@ -27,15 +27,15 @@ class push_api {
 	 * @param int $undel 是否判断推荐位去除情况
 	 * @param string $model 调取的数据模型
 	 * 调用方式
-	 * $push = pc_base::load_app_class('push_api','admin');
-	 * $push->position_update(323, 25, 45, array(20,21), array('title'=>'文章标题','thumb'=>'缩略图路径','inputtime'='时间戳'));
+	 * $push = PcBase::loadAppClass('push_api','admin');
+	 * $push->positionUpdate(323, 25, 45, array(20,21), array('title'=>'文章标题','thumb'=>'缩略图路径','inputtime'='时间戳'));
 	 */
-	public function position_update($id, $modelid, $catid, $posid, $data, $expiration = 0, $undel = 0, $model = 'content_model') {
+	public function positionUpdate($id, $modelid, $catid, $posid, $data, $expiration = 0, $undel = 0, $model = 'Content') {
 		$arr = $param = array();
 		$id = intval($id);
 		if($id == '0') return false;
 		$modelid = intval($modelid);
-		$data['inputtime'] = $data['inputtime'] ? $data['inputtime'] : SYS_TIME;
+		$data['inputtime'] = $data['inputtime'] ? $data['inputtime'] : $GLOBALS['_beginTime'];
 
 		//组装属性参数
 		$arr['modelid'] = $modelid;
@@ -46,8 +46,8 @@ class push_api {
 		//组装数据
 		$param[0] = $data;
 		$param[0]['id'] = $id;
-		if ($undel==0) $pos_info = $this->position_del($catid, $id, $posid);
-		return $this->position_list($param, $arr, $expiration, $model) ? true : false;
+		if ($undel==0) $pos_info = $this->positionDel($catid, $id, $posid);
+		return $this->positionList($param, $arr, $expiration, $model) ? true : false;
 	}
 
 	/**
@@ -57,12 +57,12 @@ class push_api {
 	 * @param int $id 文章id
 	 * @param array $input_posid 传入推荐位数组
 	 */
-	private function position_del($catid,$id,$input_posid) {
+	private function positionDel($catid,$id,$input_posid) {
 		$array = array();
-		$pos_data = pc_base::load_model('position_data_model');
+		$posData = M('PositionData');
 
 		//查找已存在推荐位
-		$r = $pos_data->select(array('id'=>$id,'catid'=>$catid),'posid');
+		$r = $posData->where(array('id'=>$id,'catid'=>$catid))->field('posid')->select();
 		if(!$r) return false;
 		foreach ($r as $v) $array[] = $v['posid'];
 
@@ -72,7 +72,7 @@ class push_api {
 		if (!$real_posid) return false;
 
 		$sql = "`catid`='$catid' AND `id`='$id' AND `posid` IN ($real_posid)";
-		return $pos_data->delete($sql) ? true : false;
+		return $posData->where($sql)->delete() ? true : false;
 	}
 
 	/**
@@ -80,16 +80,16 @@ class push_api {
 	 * @param $id
 	 * @param $modelid
 	 */
-	private function content_pos($id, $modelid) {
+	private function contentPos($id, $modelid) {
 		$id = intval($id);
 		$modelid = intval($modelid);
 		if ($id && $modelid) {
-			$db_data = pc_base::load_model('position_data_model');
-			$this->db_content = pc_base::load_model('content_model');
-			$MODEL = getcache('model','commons');
-			$this->db_content->table_name = $this->db_content->db_tablepre.$MODEL[$modelid]['tablename'];
-			$posids = $db_data->get_one(array('id'=>$id,'modelid'=>$modelid)) ? 1 : 0;
-			if ($posids==0) $this->db_content->update(array('posids'=>$posids),array('id'=>$id));
+			$db_data = M('PositionData');
+			$this->dbContent = M('Content');
+			$MODEL = cache('model','Commons');
+			$this->dbContent->tableName = $this->dbContent->tablePrefix.$MODEL[$modelid]['tablename'];
+			$posids = $db_data->where(array('id'=>$id,'modelid'=>$modelid))->find() ? 1 : 0;
+			if ($posids==0) $this->dbContent->data(array('posids'=>$posids))->where(array('id'=>$id))->save();
 		}
 		return true;
 	}
@@ -101,26 +101,26 @@ class push_api {
 	 * @param int $expiration 过期时间设置
 	 * @param string $model 调取的数据库型名称
 	 */
-	public function position_list($param = array(), $arr = array(), $expiration = 0, $model = 'content_model') {
+	public function positionList($param = array(), $arr = array(), $expiration = 0, $model = 'content') {
 		if ($arr['dosubmit']) {
 			if (!$model) {
-				$model = 'content_model';
+				$model = 'content';
 			} else {
 				$model = $model;
 			}
-			$db = pc_base::load_model($model);
+			$db = D($model);//TODO D('content')
 			$modelid = intval($arr['modelid']);
 			$catid = intval($arr['catid']);
-			$expiration = intval($expiration)>SYS_TIME ? intval($expiration) : 0;
-			$db->set_model($modelid);
+			$expiration = intval($expiration)>$GLOBALS['_beginTime'] ? intval($expiration) : 0;
+			$db->setModel($modelid);
 			$info = $r = array();
-			$pos_data = pc_base::load_model('position_data_model');
-			$position_info = getcache('position', 'commons');
-			$fulltext_array = getcache('model_field_'.$modelid,'model');
+			$posData = M('PositionData');
+			$position_info = cache('position', 'Commons');
+			$fulltext_array = cache('model_field_'.$modelid,'Model');
 			if (is_array($arr['posid']) && !empty($arr['posid']) && is_array($param) && !empty($param)) {
 				foreach ($arr['posid'] as $pid) {
 					$ext = $func_char = '';
-					$r = $this->db->get_one(array('posid'=>$pid), 'extention'); //检查推荐位是否启用了扩展字段
+					$r = $this->db->where(array('posid'=>$pid))->field('extention')->find(); //检查推荐位是否启用了扩展字段
 					$ext = $r['extention'] ? $r['extention'] : '';
 					if ($ext) {
 						$ext = str_replace(array('\'', '"', ' '), '', $ext);
@@ -172,23 +172,23 @@ class push_api {
 						$info['data'] = array2string($info['data']);
 						$info['expiration'] = $expiration;
 
-						if ($r = $pos_data->get_one(array('id'=>$d['id'], 'posid'=>$pid, 'catid'=>$info['catid']))) {
-							if($r['synedit'] == '0') $pos_data->update($info, array('id'=>$d['id'], 'posid'=>$pid, 'catid'=>$info['catid']));
+						if ($r = $posData->where(array('id'=>$d['id'], 'posid'=>$pid, 'catid'=>$info['catid']))->find()) {
+							if($r['synedit'] == '0') $posData->data($info)->where(array('id'=>$d['id'], 'posid'=>$pid, 'catid'=>$info['catid']))->save();
 						} else {
-							$pos_data->insert($info);
+							$posData->data($info)->add();
 						}
-						$db->update(array('posids'=>1), array('id'=>$d['id']));
+						$db->data(array('posids'=>1))->where(array('id'=>$d['id']))->save();
 						unset($info);
 					}
 					$maxnum = $position_info[$pid]['maxnum']+4;
-					$r = $pos_data->select(array('catid'=>$catid, 'posid'=>$pid), 'id, listorder', $maxnum.',1', 'listorder DESC, id DESC');
+					$r = $posData->where(array('catid'=>$catid, 'posid'=>$pid))->field('id, listorder')->limit($maxnum.',1')->order('listorder DESC, id DESC')->select();
 					if ($r && $position_info[$pid]['maxnum']) {
 						$listorder = $r[0]['listorder'];
 						$where = '`catid`='.$catid.' AND `posid`='.$pid.' AND `listorder`<'.$listorder;
-						$result = $pos_data->select($where, 'id, modelid');
+						$result = $posData->where($where)->field('id, modelid')->select();
 						foreach ($result as $r) {
-							$pos_data->delete(array('id'=>$r['id'], 'posid'=>$pid, 'catid'=>$catid));
-							$this->content_pos($r['id'], $r['modelid']);
+							$posData->where(array('id'=>$r['id'], 'posid'=>$pid, 'catid'=>$catid))->delte();
+							$this->contentPos($r['id'], $r['modelid']);
 						}
 					}
 				}
@@ -199,8 +199,8 @@ class push_api {
 			$infos = $info = array();
 			$where = '1';
 			$siteid = get_siteid();
-			$category = getcache('category_content_'.$siteid,'commons');
-			$positions = getcache('position', 'commons');
+			$category = cache('category_content_'.$siteid,'Commons');
+			$positions = cache('position', 'Commons');
 			if(!empty($positions)) {
 				foreach ($positions as $pid => $p) {
 					//if ($p['catid']) $catids = array_keys((array)subcat($p['catid'], 0, 1));

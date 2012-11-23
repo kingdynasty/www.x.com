@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript">
 <!--
 $(function(){
@@ -12,7 +12,7 @@ $(function(){
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=position&a=public_item_manage" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=Position&a=publicItemManage" method="post" id="myform">
 <input type="hidden" name="posid" value="<?php echo $posid?>"></input>
 <input type="hidden" name="modelid" value="<?php echo $modelid?>"></input>
 <input type="hidden" name="id" value="<?php echo $id?>"></input>
@@ -23,11 +23,11 @@ $(function(){
 </tr>
 <tr>
 <td><?php echo L('posid_thumb')?></td> 
-<td><?php echo form::images('info[thumb]','thumb',$thumb,'content')?> </td>
+<td><?php echo Form::images('info[thumb]','thumb',$thumb,'content')?> </td>
 </tr>
 <tr>
 <td><?php echo L('posid_inputtime')?></td> 
-<td><?php echo form::date('info[inputtime]', date('Y-m-d h:i:s',$inputtime), 1)?></td>
+<td><?php echo Form::date('info[inputtime]', date('Y-m-d h:i:s',$inputtime), 1)?></td>
 </tr>
 
 <tr>
@@ -56,7 +56,7 @@ $(function(){
 function category_load(obj)
 {
 	var modelid = $(obj).attr('value');
-	$.get('?m=admin&c=position&a=public_category_load&modelid='+modelid,function(data){
+	$.get('?m=Admin&c=Position&a=publicCategoryLoad&modelid='+modelid,function(data){
 			$('#load_catid').html(data);
 		  });
 }

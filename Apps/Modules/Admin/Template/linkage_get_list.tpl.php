@@ -1,8 +1,8 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <div class="pad_10">
-<form name="myform" action="?m=admin&c=role&a=listorder" method="post">
+<form name="myform" action="?m=Admin&c=Role&a=listorder" method="post">
 <div class="table-list">
     <table width="100%" cellspacing="0">
         <thead>

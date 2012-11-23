@@ -1,9 +1,9 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 
-<form action="?m=admin&c=role&a=setting_cat_priv&roleid=<?php echo $roleid?>&siteid=<?php echo $siteid?>&op=2" method="post">
+<form action="?m=Admin&c=Role&a=settingCatPriv&roleid=<?php echo $roleid?>&siteid=<?php echo $siteid?>&op=2" method="post">
 <div class="table-list" id="load_priv">
 <table width="100%" class="table-list">
 			  <thead>

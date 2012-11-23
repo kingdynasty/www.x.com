@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 <script type="text/javascript">
 <!--
@@ -13,7 +13,7 @@ $(function(){
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=position&a=add" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=Position&a=add" method="post" id="myform">
 <table width="100%" class="table_form contentWrap">
 <tr>
 <td  width="80"><?php echo L('posid_name')?></td> 
@@ -21,7 +21,7 @@ $(function(){
 </tr>
 <tr>
 <td><?php echo L('posid_modelid')?></td> 
-<td><?php echo form::select($modelinfo,'','name="info[modelid]" onchange="category_load(this);"',L('posid_select_model'));?>
+<td><?php echo Form::select($modelinfo,'','name="info[modelid]" onchange="category_load(this);"',L('posid_select_model'));?>
 
 </tr>
 <tr>
@@ -59,7 +59,7 @@ $(function(){
 function category_load(obj)
 {
 	var modelid = $(obj).attr('value');
-	$.get('?m=admin&c=position&a=public_category_load&modelid='+modelid,function(data){
+	$.get('?m=Admin&c=Position&a=publicCategoryLoad&modelid='+modelid,function(data){
 			$('#load_catid').html(data);
 		  });
 }

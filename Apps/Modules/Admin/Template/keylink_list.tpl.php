@@ -1,10 +1,10 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_dialog = 1;
-include $this->admin_tpl('header','admin');
+include Admin::adminTpl('header','admin');
 ?>
 <div class="pad-lr-10">
-<form name="myform" id="myform" action="?m=admin&c=keylink&a=delete" method="post" onsubmit="checkuid();return false;">
+<form name="myform" id="myform" action="?m=Admin&c=Keylink&a=delete" method="post" onsubmit="checkuid();return false;">
 <div class="table-list">
  <table width="100%" cellspacing="0">
         <thead>
@@ -26,7 +26,7 @@ if(is_array($infos)){
 	</td> 
         <td width="30%" align="left"><span  class="<?php echo $info['style']?>"><?php echo $info['word']?></span> </td>
         <td align="center"><?php echo $info['url']?></td>
-         <td align="center"><a href="javascript:edit(<?php echo $info['keylinkid']?>, '<?php echo new_addslashes($info['word'])?>')"><?php echo L('edit')?></a> | <a href="javascript:confirmurl('?m=admin&c=keylink&a=delete&keylinkid=<?php echo $info['keylinkid']?>', '<?php echo L('keylink_confirm_del')?>')"><?php echo L('delete')?></a> </td>
+         <td align="center"><a href="javascript:edit(<?php echo $info['keylinkid']?>, '<?php echo new_addslashes($info['word'])?>')"><?php echo L('edit')?></a> | <a href="javascript:confirmurl('?m=Admin&c=Keylink&a=delete&keylinkid=<?php echo $info['keylinkid']?>', '<?php echo L('keylink_confirm_del')?>')"><?php echo L('delete')?></a> </td>
     </tr>
 <?php
 	}
@@ -46,7 +46,7 @@ if(is_array($infos)){
 <script type="text/javascript">
 function edit(id, name) {
 	window.top.art.dialog({id:'edit'}).close();
-	window.top.art.dialog({title:'<?php echo L('keylink_edit')?> '+name+' ',id:'edit',iframe:'?m=admin&c=keylink&a=edit&keylinkid='+id,width:'450',height:'130'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
+	window.top.art.dialog({title:'<?php echo L('keylink_edit')?> '+name+' ',id:'edit',iframe:'?m=Admin&c=Keylink&a=edit&keylinkid='+id,width:'450',height:'130'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
 }
 
 function checkuid() {

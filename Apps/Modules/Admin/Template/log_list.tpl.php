@@ -1,24 +1,24 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_dialog = 1;
-include $this->admin_tpl('header','admin');
+include Admin::adminTpl('header','admin');
 ?>
 <div class="pad-lr-10"> 
-<form name="searchform" action="?m=admin&c=log&a=search_log&menuid=<?php echo $_GET['menuid'];?>" method="get" >
+<form name="searchform" action="?m=Admin&c=Log&a=searchLog&menuid=<?php echo $_GET['menuid'];?>" method="get" >
 <input type="hidden" value="admin" name="m">
 <input type="hidden" value="log" name="c">
 <input type="hidden" value="search_log" name="a">
 <table width="100%" cellspacing="0" class="search-form">
     <tbody>
 		<tr>
-		<td><div class="explain-col"><?php echo L('module')?>: <?php echo form::select($module_arr,'','name="search[module]"',$default)?> <?php echo L('username')?>  <input type="text" value="phpcms" class="input-text" name="search[username]" size='10'>  <?php echo L('times')?>  <?php echo form::date('search[start_time]','','1')?> <?php echo L('to')?>   <?php echo form::date('search[end_time]','','1')?>    <input type="submit" value="<?php echo L('determine_search')?>" class="button" name="dosubmit"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" class="button" name="del_log_4" value="<?php echo L('removed_data')?>" onclick="location='?m=admin&c=log&a=delete&week=4&menuid=<?php echo $_GET['menuid'];?>&pc_hash=<?php echo $_SESSION['pc_hash'];?>'"  />
+		<td><div class="explain-col"><?php echo L('module')?>: <?php echo Form::select($module_arr,'','name="search[module]"',$default)?> <?php echo L('username')?>  <input type="text" value="phpcms" class="input-text" name="search[username]" size='10'>  <?php echo L('times')?>  <?php echo Form::date('search[start_time]','','1')?> <?php echo L('to')?>   <?php echo Form::date('search[end_time]','','1')?>    <input type="submit" value="<?php echo L('determine_search')?>" class="button" name="dosubmit"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" class="button" name="del_log_4" value="<?php echo L('removed_data')?>" onclick="location='?m=Admin&c=Log&a=delete&week=4&menuid=<?php echo $_GET['menuid'];?>&pc_hash=<?php echo $_SESSION['pc_hash'];?>'"  />
 		</div>
 		</td>
 		</tr>
     </tbody>
 </table>
 </form>
-<form name="myform" id="myform" action="?m=admin&c=log&a=delete" method="post" onsubmit="checkuid();return false;">
+<form name="myform" id="myform" action="?m=Admin&c=Log&a=delete" method="post" onsubmit="checkuid();return false;">
 <div class="table-list">
  <table width="100%" cellspacing="0">
         <thead>

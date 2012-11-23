@@ -1,12 +1,12 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <style type="text/css">
 .table-list td b{color:#666}
 .tpl_style{background-color:#FBFAE3}
 
 </style>
-<form name="myform" action="?m=admin&c=category&a=batch_edit" method="post">
+<form name="myform" action="?m=Admin&c=Category&a=batchEdit" method="post">
 <div class="pad_10">
 <div class="explain-col">
 <?php echo L('category_batch_tips');?></a>
@@ -45,7 +45,7 @@ include $this->admin_tpl('header');?>
 	 <?php
 		foreach($batch_array as $catid=>$cat) {
 	?>
-		<td><b><?php echo L('catgory_img')?>：</b><br><?php echo form::images('info['.$catid.'][image]', 'image'.$catid, $cat['image'], 'content','',23);?></td>
+		<td><b><?php echo L('catgory_img')?>：</b><br><?php echo Form::images('info['.$catid.'][image]', 'image'.$catid, $cat['image'], 'content','',23);?></td>
 	<?php
 		}
 	?>
@@ -64,7 +64,7 @@ include $this->admin_tpl('header');?>
 		foreach($batch_array as $catid=>$cat) {
 	?>
 		<td class="tpl_style"><b><?php echo L('available_styles')?>：</b><br>
-		<?php echo form::select($template_list, $cat['setting']['template_list'], 'name="setting['.$catid.'][template_list]" id="template_list" onchange="load_file_list(this.value,'.$catid.')"', L('please_select'))?> 
+		<?php echo Form::select($template_list, $cat['setting']['template_list'], 'name="setting['.$catid.'][template_list]" id="template_list" onchange="load_file_list(this.value,'.$catid.')"', L('please_select'))?> 
 		</td>
 	<?php
 		}
@@ -76,7 +76,7 @@ include $this->admin_tpl('header');?>
 	?>
 		<td class="tpl_style"><b><?php echo L('category_index_tpl')?>：</b><br>
 		<div id="category_template<?php echo $catid;?>">
-		<?php echo form::select_template($cat['setting']['template_list'], 'content',$cat['setting']['category_template'],'name="setting['.$catid.'][category_template]" style="width:250px"','category');?>
+		<?php echo Form::selectTemplate($cat['setting']['template_list'], 'content',$cat['setting']['category_template'],'name="setting['.$catid.'][category_template]" style="width:250px"','category');?>
 		</div>
 		</td>
 	<?php
@@ -89,7 +89,7 @@ include $this->admin_tpl('header');?>
 	?>
 		<td class="tpl_style"><b><?php echo L('category_list_tpl')?>：</b><br>
 		<div id="list_template<?php echo $catid;?>">
-		<?php echo form::select_template($cat['setting']['template_list'], 'content',$cat['setting']['list_template'],'name="setting['.$catid.'][list_template]" style="width:250px"','list');?>
+		<?php echo Form::selectTemplate($cat['setting']['template_list'], 'content',$cat['setting']['list_template'],'name="setting['.$catid.'][list_template]" style="width:250px"','list');?>
 		</div>
 		</td>
 	<?php
@@ -102,7 +102,7 @@ include $this->admin_tpl('header');?>
 	?>
 		<td class="tpl_style"><b><?php echo L('content_tpl')?>：</b><br>
 		<div id="show_template<?php echo $catid;?>">
-		<?php echo form::select_template($cat['setting']['template_list'], 'content',$cat['setting']['show_template'],'name="setting['.$catid.'][show_template]" style="width:250px"','show');?>
+		<?php echo Form::selectTemplate($cat['setting']['template_list'], 'content',$cat['setting']['show_template'],'name="setting['.$catid.'][show_template]" style="width:250px"','show');?>
 		</div>
 		</td>
 	<?php
@@ -113,7 +113,7 @@ include $this->admin_tpl('header');?>
 	 <?php
 		foreach($batch_array as $catid=>$cat) {
 	?>
-		<td><b><?php echo L('workflow')?>：</b><br><?php echo form::select($workflows_datas,$cat['setting']['workflowid'],'name="setting['.$catid.'][workflowid]"',L('catgory_not_need_check'));?></td>
+		<td><b><?php echo L('workflow')?>：</b><br><?php echo Form::select($workflows_datas,$cat['setting']['workflowid'],'name="setting['.$catid.'][workflowid]"',L('catgory_not_need_check'));?></td>
 	<?php
 		}
 	?>
@@ -161,12 +161,12 @@ include $this->admin_tpl('header');?>
 		<td><b><?php echo L('category_urlrules')?>：</b><br>
 		<div id="category_php_ruleid<?php echo $catid;?>" style="display:<?php if($cat['setting']['ishtml']) echo 'none';?>">
 	<?php
-		echo form::urlrule('content','category',0,$cat['setting']['category_ruleid'],'name="category_php_ruleid['.$catid.']" style="width:250px;"');
+		echo Form::urlrule('content','category',0,$cat['setting']['category_ruleid'],'name="category_php_ruleid['.$catid.']" style="width:250px;"');
 	?>
 	</div>
 	<div id="category_html_ruleid<?php echo $catid;?>" style="display:<?php if(!$cat['setting']['ishtml']) echo 'none';?>">
 	<?php
-		echo form::urlrule('content','category',1,$cat['setting']['category_ruleid'],'name="category_html_ruleid['.$catid.']" style="width:250px;"');
+		echo Form::urlrule('content','category',1,$cat['setting']['category_ruleid'],'name="category_html_ruleid['.$catid.']" style="width:250px;"');
 	?>
 	</div>
 	  </td>
@@ -181,12 +181,12 @@ include $this->admin_tpl('header');?>
 		<td><b><?php echo L('show_urlrules')?>：</b><br>
 		<div id="show_php_ruleid<?php echo $catid;?>" style="display:<?php if($cat['setting']['content_ishtml']) echo 'none';?>">
 	  <?php
-		echo form::urlrule('content','show',0,$cat['setting']['show_ruleid'],'name="show_php_ruleid['.$catid.']" style="width:250px;"');
+		echo Form::urlrule('content','show',0,$cat['setting']['show_ruleid'],'name="show_php_ruleid['.$catid.']" style="width:250px;"');
 	?>
 	</div>
 	<div id="show_html_ruleid<?php echo $catid;?>" style="display:<?php if(!$cat['setting']['content_ishtml']) echo 'none';?>">
 	  <?php	
-		echo form::urlrule('content','show',1,$cat['setting']['show_ruleid'],'name="show_html_ruleid['.$catid.']" style="width:250px;"');
+		echo Form::urlrule('content','show',1,$cat['setting']['show_ruleid'],'name="show_html_ruleid['.$catid.']" style="width:250px;"');
 	?>
 	</div>
 	  </td>
@@ -326,7 +326,7 @@ function urlrule(type,html,catid) {
 }
 function load_file_list(id,catid) {
 	if(id=='') return false;
-	$.getJSON('?m=admin&c=category&a=public_tpl_file_list&batch_str=1&style='+id+'&catid='+catid, function(data){
+	$.getJSON('?m=Admin&c=Category&a=publicTplFileList&batch_str=1&style='+id+'&catid='+catid, function(data){
 	if(data==null) return false;
 	$('#category_template'+catid).html(data.category_template);$('#list_template'+catid).html(data.list_template);$('#show_template'+catid).html(data.show_template);});
 }

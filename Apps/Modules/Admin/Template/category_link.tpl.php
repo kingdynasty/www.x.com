@@ -1,17 +1,17 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript"> 
 <!--
 	$(function(){
 		$.formValidator.initConfig({formid:"myform",autotip:true,onerror:function(msg,obj){window.top.art.dialog({content:msg,lock:true,width:'200',height:'50'}, function(){this.close();$(obj).focus();})}});
-		$("#catname").formValidator({onshow:"<?php echo L('input_catname');?>",onfocus:"<?php echo L('input_catname');?>",oncorrect:"<?php echo L('input_right');?>"}).inputValidator({min:1,onerror:"<?php echo L('input_catname');?>"})<?php if(ROUTE_A=='edit') echo '.defaultPassed()';?>;
-		$("#url").formValidator({onshow:"<?php echo L('input_linkurl');?>",onfocus:"<?php echo L('input_linkurl');?>",oncorrect:"<?php echo L('input_right');?>"}).inputValidator({min:1,onerror:"<?php echo L('input_linkurl');?>"})<?php if(ROUTE_A=='edit') echo '.defaultPassed()';?>;
+		$("#catname").formValidator({onshow:"<?php echo L('input_catname');?>",onfocus:"<?php echo L('input_catname');?>",oncorrect:"<?php echo L('input_right');?>"}).inputValidator({min:1,onerror:"<?php echo L('input_catname');?>"})<?php if(ACTION_NAME=='edit') echo '.defaultPassed()';?>;
+		$("#url").formValidator({onshow:"<?php echo L('input_linkurl');?>",onfocus:"<?php echo L('input_linkurl');?>",oncorrect:"<?php echo L('input_right');?>"}).inputValidator({min:1,onerror:"<?php echo L('input_linkurl');?>"})<?php if(ACTION_NAME=='edit') echo '.defaultPassed()';?>;
 	})
 //-->
 </script>
 
-<form name="myform" id="myform" action="?m=admin&c=category&a=<?php echo ROUTE_A;?>" method="post">
+<form name="myform" id="myform" action="?m=Admin&c=Category&a=<?php echo ACTION_NAME;?>" method="post">
 <div class="pad-10">
 <div class="col-tab">
 
@@ -24,7 +24,7 @@ include $this->admin_tpl('header');?>
 	<tr>
         <th width="200"><?php echo L('parent_category')?>：</th>
         <td>
-		<?php echo form::select_category('category_content_'.$this->siteid,$parentid,'name="info[parentid]"',L('please_select_parent_category'),0,-1);?>
+		<?php echo Form::selectCategory('category_content_'.$this->siteid,$parentid,'name="info[parentid]"',L('please_select_parent_category'),0,-1);?>
 		</td>
       </tr>
       <tr>
@@ -34,7 +34,7 @@ include $this->admin_tpl('header');?>
 
 	<tr>
         <th><?php echo L('catgory_img')?>：</th>
-        <td><?php echo form::images('info[image]', 'image', $image, 'content');?></td>
+        <td><?php echo Form::images('info[image]', 'image', $image, 'content');?></td>
       </tr>
 		<tr>
         <th><?php echo L('link_url')?>：</th>

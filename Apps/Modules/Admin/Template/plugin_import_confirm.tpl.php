@@ -1,6 +1,6 @@
 <?php 
 	defined('IN_ADMIN') or exit('No permission resources.');
-	include $this->admin_tpl('header', 'admin');
+	include Admin::adminTpl('header', 'admin');
 ?>
 <link href="<?php echo CSS_PATH?>open_admin.css" rel="stylesheet" type="text/css" />
 <div class="pad_10">

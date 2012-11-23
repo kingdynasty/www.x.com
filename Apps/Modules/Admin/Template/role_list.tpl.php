@@ -1,8 +1,8 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <div class="table-list pad-lr-10">
-<form name="myform" action="?m=admin&c=role&a=listorder" method="post">
+<form name="myform" action="?m=Admin&c=Role&a=listorder" method="post">
     <table width="100%" cellspacing="0">
         <thead>
 		<tr>
@@ -24,16 +24,16 @@ if(is_array($infos)){
 <td width="10%" align="center"><?php echo $info['roleid']?></td>
 <td width="15%"  ><?php echo $info['rolename']?></td>
 <td width="265" ><?php echo $info['description']?></td>
-<td width="5%"><a href="?m=admin&c=role&a=change_status&roleid=<?php echo $info['roleid']?>&disabled=<?php echo ($info['disabled']==1 ? 0 : 1)?>"><?php echo $info['disabled']? L('icon_locked'):L('icon_unlock')?></a></td>
+<td width="5%"><a href="?m=Admin&c=Role&a=changeStatus&roleid=<?php echo $info['roleid']?>&disabled=<?php echo ($info['disabled']==1 ? 0 : 1)?>"><?php echo $info['disabled']? L('icon_locked'):L('icon_unlock')?></a></td>
 <td  class="text-c">
 <?php if($info['roleid'] > 1) {?>
 <a href="javascript:setting_role(<?php echo $info['roleid']?>, '<?php echo new_addslashes($info['rolename'])?>')"><?php echo L('role_setting');?></a> | <a href="javascript:void(0)" onclick="setting_cat_priv(<?php echo $info['roleid']?>, '<?php echo new_addslashes($info['rolename'])?>')"><?php echo L('usersandmenus')?></a> |
 <?php } else {?>
 <font color="#cccccc"><?php echo L('role_setting');?></font> | <font color="#cccccc"><?php echo L('usersandmenus')?></font> |
 <?php }?>
-<a href="?m=admin&c=role&a=member_manage&roleid=<?php echo $info['roleid']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('role_member_manage');?></a> | 
-<?php if($info['roleid'] > 1) {?><a href="?m=admin&c=role&a=edit&roleid=<?php echo $info['roleid']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('edit')?></a> | 
-<a href="javascript:confirmurl('?m=admin&c=role&a=delete&roleid=<?php echo $info['roleid']?>', '<?php echo L('posid_del_cofirm')?>')"><?php echo L('delete')?></a>
+<a href="?m=Admin&c=Role&a=memberManage&roleid=<?php echo $info['roleid']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('role_member_manage');?></a> | 
+<?php if($info['roleid'] > 1) {?><a href="?m=Admin&c=Role&a=edit&roleid=<?php echo $info['roleid']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('edit')?></a> | 
+<a href="javascript:confirmurl('?m=Admin&c=Role&a=delete&roleid=<?php echo $info['roleid']?>', '<?php echo L('posid_del_cofirm')?>')"><?php echo L('delete')?></a>
 <?php } else {?>
 <font color="#cccccc"><?php echo L('edit')?></font> | <font color="#cccccc"><?php echo L('delete')?></font>
 <?php }?>
@@ -53,12 +53,12 @@ if(is_array($infos)){
 <!--
 function setting_role(id, name) {
 
-	window.top.art.dialog({title:'<?php echo L('sys_setting')?>《'+name+'》',id:'edit',iframe:'?m=admin&c=role&a=priv_setting&roleid='+id,width:'700',height:'500'});
+	window.top.art.dialog({title:'<?php echo L('sys_setting')?>《'+name+'》',id:'edit',iframe:'?m=Admin&c=Role&a=privSetting&roleid='+id,width:'700',height:'500'});
 }
 
 function setting_cat_priv(id, name) {
 
-	window.top.art.dialog({title:'<?php echo L('usersandmenus')?>《'+name+'》',id:'edit',iframe:'?m=admin&c=role&a=setting_cat_priv&roleid='+id,width:'700',height:'500'});
+	window.top.art.dialog({title:'<?php echo L('usersandmenus')?>《'+name+'》',id:'edit',iframe:'?m=Admin&c=Role&a=settingCatPriv&roleid='+id,width:'700',height:'500'});
 }
 //-->
 </script>

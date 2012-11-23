@@ -1,10 +1,10 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_dialog = 1;
-include $this->admin_tpl('header','admin');
+include Admin::adminTpl('header','admin');
 ?>
 <div class="pad-lr-10">
-<form name="searchform" id="searchform" action="?m=admin&c=ipbanned&a=search_ip&menuid=<?php echo $_GET['menuid'];?>" method="get"  >
+<form name="searchform" id="searchform" action="?m=Admin&c=Ipbanned&a=searchIp&menuid=<?php echo $_GET['menuid'];?>" method="get"  >
 <input type="hidden" value="admin" name="m">
 <input type="hidden" value="ipbanned" name="c">
 <input type="hidden" value="search_ip" name="a">
@@ -18,7 +18,7 @@ include $this->admin_tpl('header','admin');
     </tbody>
 </table>
 </form>
-<form name="myform" id="myform" action="?m=admin&c=ipbanned&a=delete" method="post" onsubmit="checkuid();return false;">
+<form name="myform" id="myform" action="?m=Admin&c=Ipbanned&a=delete" method="post" onsubmit="checkuid();return false;">
 <div class="table-list">
  <table width="100%" cellspacing="0">
         <thead>
@@ -40,7 +40,7 @@ if(is_array($infos)){
 	</td> 
         <td width="30%" align="left"><span  class="<?php echo $info['style']?>"><?php echo $info['ip']?></span> </td>
         <td align="center"><?php echo date('Y-m-d', $info['expires']);?></td>
-         <td align="center"><a href="javascript:confirmurl('?m=admin&c=ipbanned&a=delete&ipbannedid=<?php echo $info['ipbannedid']?>', '<?php echo L('confirm', array('message' => L('selected')))?>')"><?php echo L('delete')?></a> </td>
+         <td align="center"><a href="javascript:confirmurl('?m=Admin&c=Ipbanned&a=delete&ipbannedid=<?php echo $info['ipbannedid']?>', '<?php echo L('confirm', array('message' => L('selected')))?>')"><?php echo L('delete')?></a> </td>
     </tr>
 <?php
 	}

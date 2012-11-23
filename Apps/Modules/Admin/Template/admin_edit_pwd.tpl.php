@@ -1,13 +1,13 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-$show_validator = true;include $this->admin_tpl('header');?>
+$show_validator = true;include Admin::adminTpl('header');?>
 <script type="text/javascript">
   $(document).ready(function() {
 	$.formValidator.initConfig({autotip:true,formid:"myform",onerror:function(msg){}});
 	$("#old_password").formValidator({empty:true,onshow:"<?php echo L('not_change_the_password_please_leave_a_blank')?>",onfocus:"<?php echo L('password').L('between_6_to_20')?>",oncorrect:"<?php echo L('old_password_right')?>"}).inputValidator({min:6,max:20,onerror:"<?php echo L('password').L('between_6_to_20')?>"}).ajaxValidator({
 	    type : "get",
 		url : "",
-		data :"m=admin&c=admin_manage&a=public_password_ajx",
+		data :"m=Admin&c=AdminManage&a=publicPasswordAjx",
 		datatype : "html",
 		async:'false',
 		success : function(data){	
@@ -30,7 +30,7 @@ $show_validator = true;include $this->admin_tpl('header');?>
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=admin_manage&a=public_edit_pwd" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=AdminManage&a=publicEditPwd" method="post" id="myform">
 <input type="hidden" name="info[userid]" value="<?php echo $userid?>"></input>
 <input type="hidden" name="info[username]" value="<?php echo $username?>"></input>
 <table width="100%" class="table_form contentWrap">

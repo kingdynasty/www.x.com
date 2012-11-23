@@ -1,14 +1,14 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 class CopyfromAction extends BaseAction {
 	private $db;
 	public $siteid;
 	function __construct() {
-		$this->db = pc_base::load_model('copyfrom_model');
-		pc_base::load_sys_class('form', '', 0);
+		$this->db = M('Copyfrom');
+		vendor('Pc.Form');
 		parent::__construct();
-		$this->siteid = $this->get_siteid();
+		$this->siteid = Admin::getSiteid();
 	}
 	
 	/**
@@ -16,12 +16,12 @@ class CopyfromAction extends BaseAction {
 	 */
 	public function init () {
 		$datas = array();
-		$datas = $this->db->listinfo(array('siteid'=>$this->siteid),'listorder ASC',$_GET['page']);
+		$datas = $this->db->where(array('siteid'=>$this->siteid))->order('listorder ASC')->page($_GET['page'])->select();
 		$pages = $this->db->pages;
 
-		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=admin&c=copyfrom&a=add\', title:\''.L('add_copyfrom').'\', width:\'580\', height:\'240\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('add_copyfrom'));
-		$this->public_cache();
-		include $this->admin_tpl('copyfrom_list');
+		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=Admin&c=Copyfrom&a=add\', title:\''.L('add_copyfrom').'\', width:\'580\', height:\'240\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('add_copyfrom'));
+		$this->publicCache();
+		include Admin::adminTpl('copyfrom_list');
 	}
 	
 	/**
@@ -30,12 +30,12 @@ class CopyfromAction extends BaseAction {
 	public function add() {
 		if(isset($_POST['dosubmit'])) {
 			$_POST['info'] = $this->check($_POST['info']);
-			$this->db->insert($_POST['info']);
+			$this->db->data($_POST['info'])->add();
 			showmessage(L('add_success'), '', '', 'add');
 		} else {
 			$show_header = $show_validator = '';
 			
-			include $this->admin_tpl('copyfrom_add');
+			include Admin::adminTpl('copyfrom_add');
 		}
 	}
 	
@@ -46,16 +46,16 @@ class CopyfromAction extends BaseAction {
 		if(isset($_POST['dosubmit'])) {
 			$id = intval($_POST['id']);
 			$_POST['info'] = $this->check($_POST['info']);
-			$this->db->update($_POST['info'],array('id'=>$id));
+			$this->db->data($_POST['info'])->where(array('id'=>$id))->save();
 			showmessage(L('update_success'), '', '', 'edit');
 		} else {
 			$show_header = $show_validator = '';
 			$id = intval($_GET['id']);
 			if (!$id) showmessage(L('illegal_action'));
-			$r = $this->db->get_one(array('id'=>$id, 'siteid'=>$this->siteid));
+			$r = $this->db->where(array('id'=>$id, 'siteid'=>$this->siteid))->find();
 			if (empty($r)) showmessage(L('illegal_action'));
 			extract($r);
-			include $this->admin_tpl('copyfrom_edit');
+			include Admin::adminTpl('copyfrom_edit');
 		}
 	}
 	
@@ -65,7 +65,7 @@ class CopyfromAction extends BaseAction {
 	public function delete() {
 		$_GET['id'] = intval($_GET['id']);
 		if (!$_GET['id']) showmessage(L('illegal_action'));
-		$this->db->delete(array('id'=>$_GET['id'], 'siteid'=>$this->siteid));
+		$this->db->where(array('id'=>$_GET['id'], 'siteid'=>$this->siteid))->delete();
 		exit('1');
 	}
 	
@@ -89,7 +89,7 @@ class CopyfromAction extends BaseAction {
 	public function listorder() {
 		if(isset($_POST['dosubmit'])) {
 			foreach($_POST['listorders'] as $id => $listorder) {
-				$this->db->update(array('listorder'=>$listorder),array('id'=>$id));
+				$this->db->data(array('listorder'=>$listorder))->where(array('id'=>$id))->save();
 			}
 			showmessage(L('operation_success'),HTTP_REFERER);
 		} else {
@@ -100,9 +100,9 @@ class CopyfromAction extends BaseAction {
 	/**
 	 * 生成缓存
 	 */
-	public function public_cache() {
-		$infos = $this->db->select('','*','','listorder DESC','','id');
-		setcache('copyfrom', $infos, 'admin');
+	public function publicCache() {
+		$infos = $this->db->order('listorder DESC')->key('id')->select();
+		cache('copyfrom', $infos, 'Admin');
 		return true;
  	}
 }

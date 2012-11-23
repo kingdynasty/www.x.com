@@ -8,9 +8,9 @@
 </style>
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header','admin');?>
+include Admin::adminTpl('header','admin');?>
 <div class="pad-10">
-<form action="?m=admin&c=cache_all&a=init&pc_hash=<?php echo $_SESSION['pc_hash']?>" target="cache_if" method="post" id="myform" name="myform">
+<form action="?m=Admin&c=CacheAll&a=init&pc_hash=<?php echo $_SESSION['pc_hash']?>" target="cache_if" method="post" id="myform" name="myform">
   <input type="hidden" name="dosubmit" value="1">
 <div class="col-2">
 <h6><?php echo L('tip_zone')?></h6>

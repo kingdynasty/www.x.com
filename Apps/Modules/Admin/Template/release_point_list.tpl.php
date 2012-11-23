@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 <div class="pad_10">
 <div class="table-list">
@@ -24,7 +24,7 @@ if(is_array($list)):
 <td><?php echo $v['name']?></td>
 <td><?php echo $v['host']?></td>
 <td><?php echo $v['username']?></td>
-<td align="center" ><a href="javascript:edit(<?php echo $v['id']?>, '<?php echo new_addslashes($v['name'])?>')"><?php echo L('edit')?></a> | <a href="?m=admin&c=release_point&a=del&id=<?php echo $v['id']?>" onclick="return confirm('<?php echo new_addslashes(L('confirm', array('message'=>$v['name'])))?>')"><?php echo L('delete')?></a></td>
+<td align="center" ><a href="javascript:edit(<?php echo $v['id']?>, '<?php echo new_addslashes($v['name'])?>')"><?php echo L('edit')?></a> | <a href="?m=Admin&c=ReleasePoint&a=del&id=<?php echo $v['id']?>" onclick="return confirm('<?php echo new_addslashes(L('confirm', array('message'=>$v['name'])))?>')"><?php echo L('delete')?></a></td>
 </tr>
 <?php 
 	endforeach;
@@ -39,7 +39,7 @@ endif;
 <!--
 function edit(id, name) {
 	window.top.art.dialog({id:'edit'}).close();
-	window.top.art.dialog({title:'<?php echo L('release_point_edit')?>《'+name+'》',id:'edit',iframe:'?m=admin&c=release_point&a=edit&id='+id,width:'700',height:'500'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
+	window.top.art.dialog({title:'<?php echo L('release_point_edit')?>《'+name+'》',id:'edit',iframe:'?m=Admin&c=ReleasePoint&a=edit&id='+id,width:'700',height:'500'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
 }
 //-->
 </script>

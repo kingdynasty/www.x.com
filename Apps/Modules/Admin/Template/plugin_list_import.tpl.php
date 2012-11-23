@@ -1,8 +1,8 @@
 <?php 
 	defined('IN_ADMIN') or exit('No permission resources.');
-	include $this->admin_tpl('header', 'admin');
+	include Admin::adminTpl('header', 'admin');
 ?>
-<form name="myform" action="?m=admin&c=position&a=listorder" method="post">
+<form name="myform" action="?m=Admin&c=Position&a=listorder" method="post">
 <div class="pad_10">
 <div class="table-list">
     <table width="100%" cellspacing="0">
@@ -25,7 +25,7 @@ if(is_array($pluginfo)){
 	<td  width="10%" align="center"><?php echo $info['version']?></td>
 	<td  width="15%" align="center"><?php echo $info['copyright']?></td>
 	<td width="10%" align="center"><?php echo $info['dir']?>/</td>
-	<td width="15%" align="center"><a href="?m=admin&c=plugin&a=import&dir=<?php echo $info['dir']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('plugin_install','','plugin')?></a></td>
+	<td width="15%" align="center"><a href="?m=Admin&c=Plugin&a=import&dir=<?php echo $info['dir']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('plugin_install','','plugin')?></a></td>
 	</tr>
 <?php 
 	}
@@ -46,11 +46,11 @@ if(is_array($pluginfo)){
 <script type="text/javascript">
 <!--
 	function add(id, name) {
-	window.top.art.dialog({title:'<?php echo L('edit')?>--'+name, id:'add', iframe:'?m=pay&c=payment&a=add&code='+id ,width:'700',height:'500'}, 	function(){var d = window.top.art.dialog({id:'add'}).data.iframe;
+	window.top.art.dialog({title:'<?php echo L('edit')?>--'+name, id:'add', iframe:'?m=Pay&c=Payment&a=add&code='+id ,width:'700',height:'500'}, 	function(){var d = window.top.art.dialog({id:'add'}).data.iframe;
 	var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'add'}).close()});
 }	
 	function edit(id, name) {
-		window.top.art.dialog({title:'<?php echo L('edit')?>--'+name, id:'edit', iframe:'?m=pay&c=payment&a=edit&id='+id ,width:'700',height:'500'}, 	function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;
+		window.top.art.dialog({title:'<?php echo L('edit')?>--'+name, id:'edit', iframe:'?m=Pay&c=Payment&a=edit&id='+id ,width:'700',height:'500'}, 	function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;
 		var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
 }
 //-->

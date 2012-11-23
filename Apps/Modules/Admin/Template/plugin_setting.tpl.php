@@ -1,7 +1,7 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
-<form action="?m=admin&c=plugin&a=config" method="post" id="myform">
+include Admin::adminTpl('header');?>
+<form action="?m=Admin&c=Plugin&a=config" method="post" id="myform">
 <div class="pad-10">
 <div class="col-tab">
 <ul class="tabBut cu-li">
@@ -42,7 +42,7 @@ function SwapTab(name,title,content,Sub,cur){
 	  });
 	}
 function loadfile(data) {
-	$("#"+data).load('?m=admin&c=plugin&a=config&pluginid=<?php echo $pluginid?>&module='+data
+	$("#"+data).load('?m=Admin&c=Plugin&a=config&pluginid=<?php echo $pluginid?>&module='+data
 	+'&pc_hash=<?php echo $_SESSION['pc_hash']?>');
 }
 new SwapTab(".tabBut","li","#tab-content",".contentList","on");//排行TAB	

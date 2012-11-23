@@ -295,7 +295,7 @@ class Image {
      * @return string
      */
     static function buildImageVerify($length=4, $mode=1, $type='png', $width=48, $height=22, $verifyName='verify') {
-        import('ORG.Util.String');
+        import('ORG.Util.String','',0);
         $randval = String::randString($length, $mode);
         session($verifyName, md5($randval));
         $width = ($length * 10 + 10) > $width ? $length * 10 + 10 : $width;
@@ -329,7 +329,7 @@ class Image {
 
     // 中文验证码
     static function GBVerify($length=4, $type='png', $width=180, $height=50, $fontface='simhei.ttf', $verifyName='verify') {
-        import('ORG.Util.String');
+        import('ORG.Util.String','',0);
         $code = String::randString($length, 4);
         $width = ($length * 45) > $width ? $length * 45 : $width;
         session($verifyName, md5($code));

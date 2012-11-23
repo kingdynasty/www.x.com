@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 <link href="<?php echo CSS_PATH?>jquery.treeTable.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="<?php echo JS_PATH?>jquery.treetable.js"></script>
@@ -48,7 +48,7 @@ include $this->admin_tpl('header');
 	</tr>
 	</thead>
 </table>
-<form name="myform" action="?m=admin&c=role&a=role_priv" method="post">
+<form name="myform" action="?m=Admin&c=Role&a=rolePriv" method="post">
 <input type="hidden" name="roleid" value="<?php echo $roleid?>"></input>
 <input type="hidden" name="siteid" value="<?php echo $siteid?>"></input>
 <table width="100%" cellspacing="0" id="dnd-example">

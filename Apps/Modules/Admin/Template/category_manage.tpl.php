@@ -1,10 +1,10 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
-<form name="myform" action="?m=admin&c=category&a=listorder" method="post">
+include Admin::adminTpl('header');?>
+<form name="myform" action="?m=Admin&c=Category&a=listorder" method="post">
 <div class="pad_10">
 <div class="explain-col">
-<?php echo L('category_cache_tips');?>，<a href="?m=admin&c=category&a=public_cache&menuid=43&module=admin"><?php echo L('update_cache');?></a>
+<?php echo L('category_cache_tips');?>，<a href="?m=Admin&c=Category&a=publicCache&menuid=43&module=admin"><?php echo L('update_cache');?></a>
 </div>
 <div class="bk10"></div>
 <div class="table-list">

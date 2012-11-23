@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include PC_PATH.'modules'.DIRECTORY_SEPARATOR.'admin'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'header.tpl.php';
+include APP_PATH.'Modules/Admin/Template/header.tpl.php';
 ?>
 <div id="main_frameid" class="pad-10 display" style="_margin-right:-12px;_width:98.9%;">
 <script type="text/javascript">
@@ -24,14 +24,14 @@ $(function(){if ($.browser.msie && parseInt($.browser.version) < 7) $('#browserV
 <?php if($pc_writeable) {?>	
 <?php echo L('main_safety_permissions')?><br />
 <?php } ?>
-<?php if(pc_base::load_config('system','debug')) {?>
+<?php if(C('debug')) {?>
 <?php echo L('main_safety_debug')?><br />
 <?php } ?>
-<?php if(!pc_base::load_config('system','errorlog')) {?>
+<?php if(!C('errorlog')) {?>
 <?php echo L('main_safety_errlog')?><br />
 <?php } ?>
 	<div class="bk20 hr"><hr /></div>	
-<?php if(pc_base::load_config('system','execution_sql')) {?>	
+<?php if(C('execution_sql')) {?>	
 <?php echo L('main_safety_sql')?> <br />
 <?php } ?>
 <?php if($logsize_warning) {?>	
@@ -39,7 +39,7 @@ $(function(){if ($.browser.msie && parseInt($.browser.version) < 7) $('#browserV
  <br />
 <?php } ?>
 <?php 
-$tpl_edit = pc_base::load_config('system','tpl_edit');
+$tpl_edit = C('tpl_edit');
 if($tpl_edit=='1') {?>
 <?php echo L('main_safety_tpledit')?><br />
 <?php } ?>
@@ -48,7 +48,7 @@ if($tpl_edit=='1') {?>
 <div class="bk10"></div>
 <div class="col-2 lf mr10" style="width:48%">
 <?php
-$ccache = getcache('category_content_1','commons');
+$ccache = cache('category_content_1','Commons');
 
 if(module_exists('member') && is_array($ccache)) { ?>
 	<h6><?php echo L('main_shortcut')?></h6>
@@ -63,7 +63,7 @@ if(module_exists('member') && is_array($ccache)) { ?>
 	<h6>Update Caches</h6>
 	<div class="content" id="update_tips" style="height:90px; overflow:auto;"><ul id="file" class="sbul">
 <div class="pad-10">
-<form action="?m=admin&c=cache_all&a=init&pc_hash=<?php echo $_SESSION['pc_hash'];?>" target="cache_if" method="post" id="myform" name="myform">
+<form action="?m=Admin&c=CacheAll&a=init&pc_hash=<?php echo $_SESSION['pc_hash'];?>" target="cache_if" method="post" id="myform" name="myform">
   <input type="hidden" name="dosubmit" value="1">
 </form>
 <iframe id="cache_if" name="cache_if" class="ifm" width="0" height="0"></iframe>

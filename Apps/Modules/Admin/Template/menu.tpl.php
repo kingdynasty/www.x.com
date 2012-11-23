@@ -1,8 +1,8 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
-<?php if(ROUTE_A=='init') {?>
-<form name="myform" action="?m=admin&c=menu&a=listorder" method="post">
+include Admin::adminTpl('header');?>
+<?php if(ACTION_NAME=='init') {?>
+<form name="myform" action="?m=Admin&c=Menu&a=listorder" method="post">
 <div class="pad-lr-10">
 <div class="table-list">
     <table width="100%" cellspacing="0">
@@ -27,7 +27,7 @@ include $this->admin_tpl('header');?>
 </html>
 
 
-<?php } elseif(ROUTE_A=='add') {?>
+<?php } elseif(ACTION_NAME=='add') {?>
 <script type="text/javascript">
 <!--
 	$(function(){
@@ -41,7 +41,7 @@ include $this->admin_tpl('header');?>
 //-->
 </script>
 <div class="common-form">
-<form name="myform" id="myform" action="?m=admin&c=menu&a=add" method="post">
+<form name="myform" id="myform" action="?m=Admin&c=Menu&a=add" method="post">
 <table width="100%" class="table_form contentWrap">
       <tr>
         <th width="200"><?php echo L('menu_parentid')?>：</th>
@@ -87,7 +87,7 @@ include $this->admin_tpl('header');?>
 
 </form>
 
-<?php } elseif(ROUTE_A=='edit') {?>
+<?php } elseif(ACTION_NAME=='edit') {?>
 <script type="text/javascript">
 <!--
 	$(function(){
@@ -101,7 +101,7 @@ include $this->admin_tpl('header');?>
 //-->
 </script>
 <div class="common-form">
-<form name="myform" id="myform" action="?m=admin&c=menu&a=edit" method="post">
+<form name="myform" id="myform" action="?m=Admin&c=Menu&a=edit" method="post">
 <table width="100%" class="table_form contentWrap">
       <tr>
         <th width="200"><?php echo L('menu_parentid')?>：</th>

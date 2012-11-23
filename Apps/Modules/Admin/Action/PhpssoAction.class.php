@@ -1,6 +1,6 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 
 class PhpssoAction extends BaseAction {
 	function __construct() {
@@ -11,10 +11,9 @@ class PhpssoAction extends BaseAction {
 	}
 	
 	
-	function public_menu_left() {
-		$setting = pc_base::load_config('system');
+	function publicMenuLeft() {
 
-		include $this->admin_tpl('phpsso');
+		include Admin::adminTpl('phpsso');
 	}
 }
 ?>

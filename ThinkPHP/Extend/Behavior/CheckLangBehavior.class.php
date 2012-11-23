@@ -61,21 +61,26 @@ class CheckLangBehavior extends Behavior {
                 $langSet = C('default_lang');
             }
         }
+        $LANG = array();
         // 定义当前语言
         define('LANG_SET',strtolower($langSet));
         // 读取项目公共语言包
-        if (is_file(LANG_PATH.LANG_SET.'/common.php'))
-            L(include LANG_PATH.LANG_SET.'/common.php');
+        if (is_file(LANG_PATH.LANG_SET.'/common.lang.php'))
+        	include LANG_PATH.LANG_SET.'/common.lang.php';
+            L($LANG);
         $module = '';
         $lang_path    =   C('app_module_mode')==1 ? BASE_LIB_PATH.'Lang/'.LANG_SET.'/' : LANG_PATH.LANG_SET.'/';        
         // 读取当前模块公共语言包
         if (defined('MODULE_NAME')){
-            if (is_file($lang_path.MODULE_NAME.'.php'))
-                L(include $lang_path.MODULE_NAME.'.php');
-            $module = MODULE_NAME.C('tmpl_file_depr');
+            if (is_file($lang_path.MODULE_NAME.'.lang.php')){
+            	include $lang_path.MODULE_NAME.'.lang.php';
+                L($LANG);
+            }
+            $module = MODULE_NAME.C('lang_file_depr');
         }
         // 读取当前控制器语言包
         if (is_file($lang_path.$module.strtolower(CONTROLER_NAME).'.php'))
-            L(include $lang_path.$module.strtolower(CONTROLER_NAME).'.php');
+        	include $lang_path.$module.strtolower(CONTROLER_NAME).'.php';
+            L($LANG);
     }
 }

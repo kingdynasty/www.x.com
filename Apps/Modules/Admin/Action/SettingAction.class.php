@@ -1,12 +1,12 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 class SettingAction extends BaseAction {
 	private $db;
 	function __construct() {
 		parent::__construct();
-		$this->db = pc_base::load_model('module_model');
-		pc_base::load_app_func('global');
+		$this->db = M('Module');
+		
 	}
 	
 	/**
@@ -14,15 +14,15 @@ class SettingAction extends BaseAction {
 	 */
 	public function init() {
 		$show_validator = true;
-		$setconfig = pc_base::load_config('system');	
-		extract($setconfig);
+		//$setconfig = PcBase::loadConfig('system');	
+		//extract($setconfig);
 		if(!function_exists('ob_gzhandler')) $gzip = 0;
-		$info = $this->db->get_one(array('module'=>'admin'));
+		$info = $this->db->where(array('module'=>'admin'))->find();
 		extract(string2array($info['setting']));
 		$show_header = true;
 		$show_validator = 1;
 		
-		include $this->admin_tpl('setting');
+		include Admin::adminTpl('setting');
 	}
 	
 	/**
@@ -44,7 +44,7 @@ class SettingAction extends BaseAction {
 		$setting['mail_password'] = trim($_POST['setting']['mail_password']);
 		$setting['errorlog_size'] = trim($_POST['setting']['errorlog_size']);
 		$setting = array2string($setting);
-		$this->db->update(array('setting'=>$setting), array('module'=>'admin')); //存入admin模块setting字段
+		$this->db->data(array('setting'=>$setting))->where(array('module'=>'admin'))->save(); //存入admin模块setting字段
 		
 		//如果开始盛大通行证接入，判断服务器是否支持curl
 		$snda_error = '';
@@ -56,15 +56,15 @@ class SettingAction extends BaseAction {
 		}
 
 		set_config($_POST['setconfig']);	 //保存进config文件
-		$this->setcache();
+		$this->cache();
 		showmessage(L('setting_succ').$snda_error, HTTP_REFERER);
 	}
 	
 	/*
 	 * 测试邮件配置
 	 */
-	public function public_test_mail() {
-		pc_base::load_sys_func('mail');
+	public function publicTestMail() {
+		load('mail');
 		$subject = 'phpcms test mail';
 		$message = 'this is a test mail from phpcms team';
 		$mail= Array (
@@ -91,10 +91,10 @@ class SettingAction extends BaseAction {
 	 * 设置缓存
 	 * Enter description here ...
 	 */
-	private function setcache() {
-		$result = $this->db->get_one(array('module'=>'admin'));
+	private function cache() {
+		$result = $this->db->where(array('module'=>'admin'))->find();
 		$setting = string2array($result['setting']);
-		setcache('common', $setting,'commons');
+		cache('common', $setting,'Commons');
 	}
 }
 ?>

@@ -1,28 +1,22 @@
 <?php
-defined('APP_NAME') or exit('No permission resources.');
-$session_storage = 'session_'.pc_base::load_config('system','session_storage');
-pc_base::load_sys_class($session_storage);
-if(param::get_cookie('sys_lang')) {
-	define('SYS_STYLE',param::get_cookie('sys_lang'));
-} else {
-	define('SYS_STYLE','zh-cn');
-}
 //定义在后台
 define('IN_ADMIN',true);
-class admin {
+$LANG = array();
+include LANG_PATH . LANG_SET . '/system_menu.lang.php';
+L ( $LANG );
+class Admin extends Action{
 	public $userid;
 	public $username;
-	
-	public function __construct() {
-		self::check_admin();
-		self::check_priv();
-		pc_base::load_app_func('global','admin');
-		if (!module_exists(ROUTE_M)) showmessage(L('module_not_exists'));
-		self::manage_log();
-		self::check_ip();
-		self::lock_screen();
-		self::check_hash();
-		if(pc_base::load_config('system','admin_url') && $_SERVER["HTTP_HOST"]!= pc_base::load_config('system','admin_url')) {
+
+	public function _initialize() {
+		self::checkAdmin();
+		self::checkPriv();
+		if (!module_exists(MODULE_NAME)) $this->error(L('module_not_exists'));
+		self::manageLog();
+		self::checkIp();
+		self::lockScreen();
+		self::checkHash();
+		if(C('admin_url') && $_SERVER["HTTP_HOST"]!= C('admin_url')) {
 			Header("http/1.1 403 Forbidden");
 			exit('No permission resources.');
 		}
@@ -31,11 +25,11 @@ class admin {
 	/**
 	 * 判断用户是否已经登陆
 	 */
-	final public function check_admin() {
-		if(ROUTE_M =='admin' && ROUTE_C =='index' && in_array(ROUTE_A, array('login', 'public_card'))) {
+	final public function checkAdmin() {
+		if(MODULE_NAME =='Admin' && CONTROLER_NAME =='Index' && in_array(ACTION_NAME, array('login', 'publicCard'))) {
 			return true;
-		} else {
-			if(!isset($_SESSION['userid']) || !isset($_SESSION['roleid']) || !$_SESSION['userid'] || !$_SESSION['roleid']) showmessage(L('admin_login'),'?m=admin&c=index&a=login');
+		} else {		    
+			if(!isset($_SESSION['userid']) || !isset($_SESSION['roleid']) || !$_SESSION['userid'] || !$_SESSION['roleid']) Action::error(L('admin_login'),'?m=Admin&c=Index&a=login');
 		}
 	}
 
@@ -44,10 +38,10 @@ class admin {
 	 * @param string $file 文件名
 	 * @param string $m 模型名
 	 */
-	final public static function admin_tpl($file, $m = '') {
-		$m = empty($m) ? ROUTE_M : $m;
+	final public static function adminTpl($file, $m = '') {
+		$m = empty($m) ? MODULE_NAME : $m;
 		if(empty($m)) return false;
-		return PC_PATH.'modules'.DIRECTORY_SEPARATOR.$m.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.$file.'.tpl.php';
+		return APP_PATH.'Modules/'.$m.'/Template/'.$file.'.tpl.php';
 	}
 	
 	/**
@@ -55,26 +49,30 @@ class admin {
 	 * @param integer $parentid   父菜单ID  
 	 * @param integer $with_self  是否包括他自己
 	 */
-	final public static function admin_menu($parentid, $with_self = 0) {
+	final public static function adminMenu($parentid, $with_self = 0) {
 		$parentid = intval($parentid);
-		$menudb = pc_base::load_model('menu_model');
-		$result =$menudb->select(array('parentid'=>$parentid,'display'=>1),'*',1000,'listorder ASC');
-		if($with_self) {
-			$result2[] = $menudb->get_one(array('id'=>$parentid));
-			$result = array_merge($result2,$result);
+		$menudb = M('Menu');
+		$result =$menudb->where(array('parentid'=>$parentid,'display'=>1))->limit(1000)->order('listorder ASC')->select();
+		if (is_array($result)) {
+			$result = array_map ('adapt_name', $result);
+			if ($with_self) {
+				$result2 [] = $menudb->where ( array ('id' => $parentid ))->find ();
+				$result2 = array_map ('adapt_name', $result2);
+				$result = array_merge ($result2, $result);
+			}
 		}
 		//权限检查
 		if($_SESSION['roleid'] == 1) return $result;
 		$array = array();
-		$privdb = pc_base::load_model('admin_role_priv_model');
-		$siteid = param::get_cookie('siteid');
+		$privdb = M('AdminRolePriv');
+		$siteid = cookie('siteid');
 		foreach($result as $v) {
 			$action = $v['a'];
-			if(preg_match('/^public_/',$action)) {
+			if(preg_match('/^public/',$action)) {
 				$array[] = $v;
 			} else {
-				if(preg_match('/^ajax_([a-z]+)_/',$action,$_match)) $action = $_match[1];
-				$r = $privdb->get_one(array('m'=>$v['m'],'c'=>$v['c'],'a'=>$action,'roleid'=>$_SESSION['roleid'],'siteid'=>$siteid));
+				if(preg_match('/^ajax([A-za-z]+)/',$action,$_match)) $action = $_match[1];
+				$r = $privdb->where(array('m'=>$v['m'],'c'=>$v['c'],'a'=>$action,'roleid'=>$_SESSION['roleid'],'siteid'=>$siteid))->find();
 				if($r) $array[] = $v;
 			}
 		}
@@ -87,28 +85,29 @@ class admin {
 	 */
 	final public static function submenu($parentid = '', $big_menu = false) {
 		if(empty($parentid)) {
-			$menudb = pc_base::load_model('menu_model');
-			$r = $menudb->get_one(array('m'=>ROUTE_M,'c'=>ROUTE_C,'a'=>ROUTE_A));
+			$menudb = M('Menu');
+			$r = $menudb->where(array('m'=>MODULE_NAME,'c'=>CONTROLER_NAME,'a'=>ACTION_NAME))->find();
 			$parentid = $_GET['menuid'] = $r['id'];
 		}
-		$array = self::admin_menu($parentid,1);
-		
+		$array = self::adminMenu($parentid,1);
 		$numbers = count($array);
 		if($numbers==1 && !$big_menu) return '';
 		$string = '';
 		$pc_hash = $_SESSION['pc_hash'];
-		foreach($array as $_value) {
-			if (!isset($_GET['s'])) {
-				$classname = ROUTE_M == $_value['m'] && ROUTE_C == $_value['c'] && ROUTE_A == $_value['a'] ? 'class="on"' : '';
-			} else {
-				$_s = !empty($_value['data']) ? str_replace('=', '', strstr($_value['data'], '=')) : '';
-				$classname = ROUTE_M == $_value['m'] && ROUTE_C == $_value['c'] && ROUTE_A == $_value['a'] && $_GET['s'] == $_s ? 'class="on"' : '';
-			}
-			if($_value['parentid'] == 0 || $_value['m']=='') continue;
-			if($classname) {
-				$string .= "<a href='javascript:;' $classname><em>".L($_value['name'])."</em></a><span>|</span>";
-			} else {
-				$string .= "<a href='?m=".$_value['m']."&c=".$_value['c']."&a=".$_value['a']."&menuid=$parentid&pc_hash=$pc_hash".'&'.$_value['data']."' $classname><em>".L($_value['name'])."</em></a><span>|</span>";
+		if (is_array($array)) {
+			foreach($array as $_value) {
+				if (!isset($_GET['s'])) {
+					$classname = MODULE_NAME == $_value['m'] && CONTROLER_NAME == $_value['c'] && ACTION_NAME == $_value['a'] ? 'class="on"' : '';
+				} else {
+					$_s = !empty($_value['data']) ? str_replace('=', '', strstr($_value['data'], '=')) : '';
+					$classname = MODULE_NAME == $_value['m'] && CONTROLER_NAME == $_value['c'] && ACTION_NAME == $_value['a'] && $_GET['s'] == $_s ? 'class="on"' : '';
+				}
+				if($_value['parentid'] == 0 || $_value['m']=='') continue;
+				if($classname) {
+					$string .= "<a href='javascript:;' $classname><em>".L($_value['name'])."</em></a><span>|</span>";
+				} else {
+					$string .= "<a href='?m=".$_value['m']."&c=".$_value['c']."&a=".$_value['a']."&menuid=$parentid&pc_hash=$pc_hash".'&'.$_value['data']."' $classname><em>".L($_value['name'])."</em></a><span>|</span>";
+				}
 			}
 		}
 		$string = substr($string,0,-14);
@@ -119,12 +118,11 @@ class admin {
 	 * 
 	 * @param $id 菜单id
 	 */
-	final public static function current_pos($id) {
-		$menudb = pc_base::load_model('menu_model');
-		$r =$menudb->get_one(array('id'=>$id),'id,name,parentid');
+	final public static function currentPos($id) {
+		$r =M('Menu')->field('id,name,parentid')->where(array('id'=>$id))->find();
 		$str = '';
 		if($r['parentid']) {
-			$str = self::current_pos($r['parentid']);
+			$str = self::currentPos($r['parentid']);
 		}
 		return $str.L($r['name']).' > ';
 	}
@@ -132,7 +130,7 @@ class admin {
 	/**
 	 * 获取当前的站点ID
 	 */
-	final public static function get_siteid() {
+	final public static function getSiteid() {
 		return get_siteid();
 	}
 	
@@ -141,55 +139,51 @@ class admin {
 	 * @param integer $siteid 站点ID号，为空时取当前站点的信息
 	 * @return array
 	 */
-	final public static function get_siteinfo($siteid = '') {
-		if ($siteid == '') $siteid = self::get_siteid();
+	final public static function getSiteinfo($siteid = '') {
+		if ($siteid == '') $siteid = Admin::getSiteid();
 		if (empty($siteid)) return false;
-		$sites = pc_base::load_app_class('sites', 'admin');
-		return $sites->get_by_id($siteid);
+		$Sites = import('Sites');
+		return $Sites->getById($siteid);
 	}
 	
-	final public static function return_siteid() {
-		$sites = pc_base::load_app_class('sites', 'admin');
-		$siteid = explode(',',$sites->get_role_siteid($_SESSION['roleid']));
+	final public static function returnSiteid() {		
+	    $sites = import('Sites');
+		$siteid = explode(',',$sites->getRoleSiteid($_SESSION['roleid']));
 		return current($siteid);
 	}
 	/**
 	 * 权限判断
 	 */
-	final public function check_priv() {
-		if(ROUTE_M =='admin' && ROUTE_C =='index' && in_array(ROUTE_A, array('login', 'init', 'public_card'))) return true;
+	final public function checkPriv() {
+		if(MODULE_NAME =='Admin' && CONTROLER_NAME =='Index' && in_array(ACTION_NAME, array('login', 'init', 'publicCard'))) return true;
 		if($_SESSION['roleid'] == 1) return true;
-		$siteid = param::get_cookie('siteid');
-		$action = ROUTE_A;
-		$privdb = pc_base::load_model('admin_role_priv_model');
-		if(preg_match('/^public_/',ROUTE_A)) return true;
-		if(preg_match('/^ajax_([a-z]+)_/',ROUTE_A,$_match)) {
+		$siteid = cookie('siteid');
+		$action = ACTION_NAME;
+		if(preg_match('/^public_/',ACTION_NAME)) return true;
+		if(preg_match('/^ajax_([a-z]+)_/',ACTION_NAME,$_match)) {
 			$action = $_match[1];
 		}
-		$r =$privdb->get_one(array('m'=>ROUTE_M,'c'=>ROUTE_C,'a'=>$action,'roleid'=>$_SESSION['roleid'],'siteid'=>$siteid));
-		if(!$r) showmessage('您没有权限操作该项','blank');
+		$r =M('AdminRolePriv')->where(array('m'=>MODULE_NAME,'c'=>CONTROLER_NAME,'a'=>$action,'roleid'=>$_SESSION['roleid'],'siteid'=>$siteid))->find();
+		if(!$r) $this->error('您没有权限操作该项','blank');
 	}
 
 	/**
 	 * 
 	 * 记录日志 
 	 */
-	final private function manage_log() {
+	final private function manageLog() {
 		//判断是否记录
-		$setconfig = pc_base::load_config('system');
-		extract($setconfig);
- 		if($admin_log==1){
- 			$action = ROUTE_A;
- 			if($action == '' || strchr($action,'public') || $action == 'init' || $action=='public_current_pos') {
+ 		if(C('admin_log')==1){
+ 			$action = ACTION_NAME;
+ 			if($action == '' || strchr($action,'public') || $action == 'init' || $action=='publicCurrentPos') {
 				return false;
 			}else {
-				$ip = ip();
-				$log = pc_base::load_model('log_model');
-				$username = param::get_cookie('admin_username');
+				$ip = get_client_ip();
+				$username = cookie('admin_username');
 				$userid = isset($_SESSION['userid']) ? $_SESSION['userid'] : '';
-				$time = date('Y-m-d H-i-s',SYS_TIME);
-				$url = '?m='.ROUTE_M.'&c='.ROUTE_C.'&a='.ROUTE_A;
-				$log->insert(array('module'=>ROUTE_M,'username'=>$username,'userid'=>$userid,'action'=>ROUTE_C, 'querystring'=>$url,'time'=>$time,'ip'=>$ip));
+				$time = date('Y-m-d H-i-s',$GLOBALS['_beginTime']);
+				$url = '?m='.MODULE_NAME.'&c='.CONTROLER_NAME.'&a='.ACTION_NAME;
+				M('Log')->data(array('module'=>MODULE_NAME,'username'=>$username,'userid'=>$userid,'action'=>CONTROLER_NAME, 'querystring'=>$url,'time'=>$time,'ip'=>$ip))->add();
 			}
 	  	}
 	}
@@ -198,25 +192,25 @@ class admin {
 	 * 
 	 * 后台IP禁止判断 ...
 	 */
-	final private function check_ip(){
-		$this->ipbanned = pc_base::load_model('ipbanned_model');
-		$this->ipbanned->check_ip();
+	final private function checkIp(){
+		$this->ipbanned = D('Ipbanned');
+		$this->ipbanned->checkIp();
  	}
  	/**
  	 * 检查锁屏状态
  	 */
-	final private function lock_screen() {
+	final private function lockScreen() {
 		if(isset($_SESSION['lock_screen']) && $_SESSION['lock_screen']==1) {
-			if(preg_match('/^public_/', ROUTE_A) || (ROUTE_M == 'content' && ROUTE_C == 'create_html') || (ROUTE_M == 'release') || (ROUTE_A == 'login') || (ROUTE_M == 'search' && ROUTE_C == 'search_admin' && ROUTE_A=='createindex')) return true;
-			showmessage(L('admin_login'),'?m=admin&c=index&a=login');
+			if(preg_match('/^public/', ACTION_NAME) || (MODULE_NAME == 'Content' && CONTROLER_NAME == 'createHtml') || (MODULE_NAME == 'release') || (ACTION_NAME == 'login') || (MODULE_NAME == 'Search' && CONTROLER_NAME == 'searchAdmin' && ACTION_NAME=='createindex')) return true;
+			$this->error(L('admin_login'),'?m=Adminc=Index&a=login');
 		}
 	}
 
 	/**
  	 * 检查hash值，验证用户数据安全性
  	 */
-	final private function check_hash() {
-		if(preg_match('/^public_/', ROUTE_A) || ROUTE_M =='admin' && ROUTE_C =='index' || in_array(ROUTE_A, array('login'))) {
+	final private function checkHash() {
+		if(preg_match('/^public/', ACTION_NAME) || MODULE_NAME =='Admin' && CONTROLER_NAME =='Index' || in_array(ACTION_NAME, array('login'))) {
 			return true;
 		}
 		if(isset($_GET['pc_hash']) && $_SESSION['pc_hash'] != '' && ($_SESSION['pc_hash'] == $_GET['pc_hash'])) {
@@ -224,29 +218,28 @@ class admin {
 		} elseif(isset($_POST['pc_hash']) && $_SESSION['pc_hash'] != '' && ($_SESSION['pc_hash'] == $_POST['pc_hash'])) {
 			return true;
 		} else {
-			showmessage(L('hash_check_false'),HTTP_REFERER);
+			$this->error(L('hash_check_false'),HTTP_REFERER);
 		}
 	}
-
 	/**
 	 * 后台信息列表模板
 	 * @param string $id 被选中的模板名称
 	 * @param string $str form表单中的属性名
 	 */
-	final public function admin_list_template($id = '', $str = '') {
-		$templatedir = PC_PATH.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'content'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR;
-		$pre = 'content_list';
-		$templates = glob($templatedir.$pre.'*.tpl.php');
-		if(empty($templates)) return false;
-		$files = @array_map('basename', $templates);
-		$templates = array();
-		if(is_array($files)) {
-			foreach($files as $file) {
-				$key = substr($file, 0, -8);
-				$templates[$key] = $file;
-			}
-		}
-		ksort($templates);
-		return form::select($templates, $id, $str,L('please_select'));
-	}
+	final public function adminListTemplate($id = '', $str = '') {
+	    $templatedir = MODULE_PATH.'/Content/Template/';
+	    $pre = 'content_list';
+	    $templates = glob($templatedir.$pre.'*.tpl.php');
+	    if(empty($templates)) return false;
+	    $files = @array_map('basename', $templates);
+	    $templates = array();
+	    if(is_array($files)) {
+	        foreach($files as $file) {
+	            $key = substr($file, 0, -8);
+	            $templates[$key] = $file;
+	        }
+	    }
+	    ksort($templates);
+	    return Form::select($templates, $id, $str,L('please_select'));
+	}	
 }

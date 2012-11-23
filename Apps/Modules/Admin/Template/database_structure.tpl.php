@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <div class="pad_10">
 <div class="table-list">
 <xmp><?php echo $structure?></xmp>

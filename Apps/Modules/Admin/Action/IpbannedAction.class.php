@@ -1,29 +1,29 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 class IpbannedAction extends BaseAction {
 	function __construct() {
-		$this->db = pc_base::load_model('ipbanned_model');
-		pc_base::load_sys_class('form', '', 0);
+		$this->db = M('Ipbanned');
+		vendor('Pc.Form');
 		parent::__construct();
 	}
 	
 	function init () {
 		$page = $_GET['page'] ? $_GET['page'] : '1';
 		$infos = array();
-		$infos = $this->db->listinfo('','ipbannedid DESC',$page ,'20');
+		$infos = $this->db->order('ipbannedid DESC')->page($page ,'20')->select();
 		$pages = $this->db->pages;	
-		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=admin&c=ipbanned&a=add\', title:\''.L('add_ipbanned').'\', width:\'450\', height:\'300\'}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('add_ipbanned'));
-		include $this->admin_tpl('ipbanned_list');
+		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=Admin&c=Ipbanned&a=add\', title:\''.L('add_ipbanned').'\', width:\'450\', height:\'300\'}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('add_ipbanned'));
+		include Admin::adminTpl('ipbanned_list');
 	}
 	
 	/**
 	 * 验证数据有效性
 	 */
-	public function public_name() {
+	public function publicName() {
 		$ip = isset($_GET['ip']) && trim($_GET['ip']) ? (CHARSET == 'gbk' ? iconv('utf-8', 'gbk', trim($_GET['ip'])) : trim($_GET['ip'])) : exit('0');
  		//添加判断IP是否重复
-		if ($this->db->get_one(array('ip'=>$ip), 'ipbannedid')) {
+		if ($this->db->where(array('ip'=>$ip))->field('ipbannedid')->find()) {
 			exit('0');
 		} else {
 			exit('1');
@@ -36,12 +36,12 @@ class IpbannedAction extends BaseAction {
 	function add() {
 		if(isset($_POST['dosubmit'])){
   			$_POST['info']['expires']=strtotime($_POST['info']['expires']);
-			$this->db->insert($_POST['info']);
-			$this->public_cache_file();//更新缓存 
-			showmessage(L('operation_success'),'?m=admin&c=ipbanned&a=add','', 'add');
+			$this->db->data($_POST['info'])->add();
+			$this->publicCacheFile();//更新缓存 
+			showmessage(L('operation_success'),'?m=Admin&c=Ipbanned&a=add','', 'add');
 		}else{
 			$show_validator = $show_scroll = $show_header = true;
-	 		include $this->admin_tpl('ipbanned_add');
+	 		include Admin::adminTpl('ipbanned_add');
 		}	 
 	} 
 	 
@@ -51,19 +51,19 @@ class IpbannedAction extends BaseAction {
 	function delete() {
  		if(is_array($_POST['ipbannedid'])){
 			foreach($_POST['ipbannedid'] as $ipbannedid_arr) {
-				$this->db->delete(array('ipbannedid'=>$ipbannedid_arr));
+				$this->db->where(array('ipbannedid'=>$ipbannedid_arr))->delete();
 			}
-			$this->public_cache_file();//更新缓存 
-			showmessage(L('operation_success'),'?m=admin&c=ipbanned');	
+			$this->publicCacheFile();//更新缓存 
+			showmessage(L('operation_success'),'?m=Admin&c=Ipbanned');	
 		} else {
 			$ipbannedid = intval($_GET['ipbannedid']);
 			if($ipbannedid < 1) return false;
-			$result = $this->db->delete(array('ipbannedid'=>$ipbannedid));
-			$this->public_cache_file();//更新缓存 
+			$result = $this->db->where(array('ipbannedid'=>$ipbannedid))->delete();
+			$this->publicCacheFile();//更新缓存 
 			if($result){
-				showmessage(L('operation_success'),'?m=admin&c=ipbanned');
+				showmessage(L('operation_success'),'?m=Admin&c=Ipbanned');
 			} else {
-				showmessage(L("operation_failure"),'?m=admin&c=ipbanned');
+				showmessage(L("operation_failure"),'?m=Admin&c=Ipbanned');
 			}
 		}
 	}
@@ -71,25 +71,25 @@ class IpbannedAction extends BaseAction {
 	/**
 	 * IP搜索
 	 */
-	public function search_ip() {
+	public function searchIp() {
 		$where = '';
 		if($_GET['search']) extract($_GET['search']);
 		if($ip){
 			$where .= $where ?  " AND ip LIKE '%$ip%'" : " ip LIKE '%$ip%'";
 		}
-		$page = isset($_GET['page']) && intval($_GET['page']) ? intval($_GET['page']) : 1;
-		$infos = $this->db->listinfo($where,$order = 'ipbannedid DESC',$page, $pages = '2');
+		$page = max(intval($_GET['page']),1);
+		$infos = $this->db->where($where)->order($order = 'ipbannedid DESC')->page($page, $pages = '2')->select();
 		$pages = $this->db->pages;
-  		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=admin&c=ipbanned&a=add\', title:\''.L('add_ipbanned').'\', width:\'450\', height:\'300\'}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('add_ipbanned'));
-		include $this->admin_tpl('ip_search_list');
+  		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=Admin&c=Ipbanned&a=add\', title:\''.L('add_ipbanned').'\', width:\'450\', height:\'300\'}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('add_ipbanned'));
+		include Admin::adminTpl('ip_search_list');
 	} 
 	
 	/**
 	 * 生成缓存
 	 */
-	public function public_cache_file() {
-		$infos = $this->db->select('','ip,expires','','ipbannedid desc');
-		setcache('ipbanned', $infos, 'commons');
+	public function publicCacheFile() {
+		$infos = $this->db->field('ip,expires')->order('ipbannedid desc')->select();
+		cache('ipbanned', $infos, 'Commons');
 		return true;
  	}
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" class="off">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8 echo CHARSET?>" />
+<meta http-equiv="Content-Type" content="text/html; charset=<?php echo CHARSET;?>" />
 <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
 <title><?php echo L('admin_site_title')?></title>
 <link href="<?php echo CSS_PATH?>reset.css" rel="stylesheet" type="text/css" />
@@ -46,14 +46,14 @@ var pc_hash = '<?php echo $_SESSION['pc_hash']?>'
         </div>
     </div>
     <div class="col-auto">
-    	<div class="log white cut_line"><?php echo L('hello'),$admin_username?>  [<?php echo $rolename?>]<span>|</span><a href="?m=admin&c=index&a=public_logout">[<?php echo L('exit')?>]</a><span>|</span>
+    	<div class="log white cut_line"><?php echo L('hello'),$admin_username?>  [<?php echo $rolename?>]<span>|</span><a href="?m=Admin&c=Index&a=publicLogout">[<?php echo L('exit')?>]</a><span>|</span>
     		<a href="<?php echo $currentsite['domain']?>" target="_blank" id="site_homepage"><?php echo L('site_homepage')?></a><span>|</span>
     		<a href="?m=member" target="_blank"><?php echo L('member_center')?></a><span>|</span>
     		<a href="?m=search" target="_blank" id="site_search"><?php echo L('search')?></a>
     	</div>
         <ul class="nav white" id="top_menu">
         <?php
-        $array = admin::admin_menu(0);
+        $array = Admin::adminMenu(0);
         foreach($array as $_value) {
         	if($_value['id']==10) {
         		echo '<li id="_M'.$_value['id'].'" class="on top_menu"><a href="javascript:_M('.$_value['id'].',\'?m='.$_value['m'].'&c='.$_value['c'].'&a='.$_value['a'].'\')" hidefocus="true" style="outline:none;">'.L($_value['name']).'</a></li>';
@@ -79,11 +79,11 @@ var pc_hash = '<?php echo $_SESSION['pc_hash']?>'
         </div>
     <div class="col-auto mr8">
     <div class="crumbs">
-    <div class="shortcut cu-span"><a href="?m=content&c=create_html&a=public_index&pc_hash=<?php echo $_SESSION['pc_hash'];?>" target="right"><span><?php echo L('create_index')?></span></a><a href="?m=admin&c=cache_all&a=init&pc_hash=<?php echo $_SESSION['pc_hash'];?>" target="right"><span><?php echo L('update_backup')?></span></a><a href="javascript:art.dialog({id:'map',iframe:'?m=admin&c=index&a=public_map', title:'<?php echo L('background_map')?>', width:'700', height:'500', lock:true});void(0);"><span><?php echo L('background_map')?></span></a><?php echo runhook('admin_top_left_menu')?></div>
+    <div class="shortcut cu-span"><a href="?m=Content&c=CreateHtml&a=publicIndex&pc_hash=<?php echo $_SESSION['pc_hash'];?>" target="right"><span><?php echo L('create_index')?></span></a><a href="?m=Admin&c=CacheAll&a=init&pc_hash=<?php echo $_SESSION['pc_hash'];?>" target="right"><span><?php echo L('update_backup')?></span></a><a href="javascript:art.dialog({id:'map',iframe:'?m=Admin&c=Index&a=publicMap', title:'<?php echo L('background_map')?>', width:'700', height:'500', lock:true});void(0);"><span><?php echo L('background_map')?></span></a><?php echo runhook('admin_top_left_menu')?></div>
     <?php echo L('current_position')?><span id="current_pos"></span></div>
     	<div class="col-1">
         	<div class="content" style="position:relative; overflow:hidden">
-                <iframe name="right" id="rightMain" src="?m=admin&c=index&a=public_main" frameborder="false" scrolling="auto" style="border:none; margin-bottom:30px" width="100%" height="auto" allowtransparency="true"></iframe>
+                <iframe name="right" id="rightMain" src="?m=Admin&c=Index&a=publicMain" frameborder="false" scrolling="auto" style="border:none; margin-bottom:30px" width="100%" height="auto" allowtransparency="true"></iframe>
                 <div class="fav-nav">
 					<div id="panellist">
 						<?php foreach($adminpanel as $v) {?>
@@ -186,16 +186,16 @@ $(function(){
 	$(".tab_web span").mouseout(function(){hidden_site_list_1()});
 	$(".tab-web-panel").mouseover(function(){clearh();$('.tab_web a').addClass('on')}).mouseout(function(){hidden_site_list_1();$('.tab_web a').removeClass('on')});
 	//默认载入左侧菜单
-	$("#leftMain").load("?m=admin&c=index&a=public_menu_left&menuid=10");
+	$("#leftMain").load("?m=Admin&c=Index&a=publicMenuLeft&menuid=10");
 })
 //站点选择
 function site_select(id,name, domain, siteid) {
 	$(".tab_web span").html(name);
-	$.get("?m=admin&c=index&a=public_set_siteid&siteid="+id,function(data){
+	$.get("?m=Admin&c=Index&a=publicSetSiteid&siteid="+id,function(data){
 		if (data==1){
 				window.top.right.location.reload();
 				window.top.center_frame.location.reload();
-				$.get("?m=admin&c=index&a=public_menu_left&menuid=0&parentid="+$("#bigid").val(), function(data){$('.top_menu').remove();$('#top_menu').prepend(data)});
+				$.get("?m=Admin&c=Index&a=publicMenuLeft&menuid=0&parentid="+$("#bigid").val(), function(data){$('.top_menu').remove();$('#top_menu').prepend(data)});
 			}
 		});
 	$('#site_homepage').attr('href', domain);
@@ -240,20 +240,20 @@ $("#openClose").click(function(){
 function _M(menuid,targetUrl) {
 	$("#menuid").val(menuid);
 	$("#bigid").val(menuid);
-	$("#paneladd").html('<a class="panel-add" href="javascript:add_panel();"><em><?php echo L('add')?></em></a>');
+	$("#paneladd").html('<a class="panel->add" href="javascript:add_panel();"><em><?php echo L('add')?></em></a>');
 	if(menuid!=8) {
-		$("#leftMain").load("?m=admin&c=index&a=public_menu_left&menuid="+menuid, {limit: 25}, function(){
+		$("#leftMain").load("?m=Admin&c=Index&a=publicMenuLeft&menuid="+menuid, {limit: 25}, function(){
 		   windowW();
 		 });
 	} else {
-		$("#leftMain").load("?m=admin&c=phpsso&a=public_menu_left&menuid="+menuid, {limit: 25}, function(){
+		$("#leftMain").load("?m=Admin&c=Phpsso&a=publicMenuLeft&menuid="+menuid, {limit: 25}, function(){
 		   windowW();
 		 });
 	}
 	//$("#rightMain").attr('src', targetUrl);
 	$('.top_menu').removeClass("on");
 	$('#_M'+menuid).addClass("on");
-	$.get("?m=admin&c=index&a=public_current_pos&menuid="+menuid, function(data){
+	$.get("?m=Admin&c=Index&a=publicCurrentPos&menuid="+menuid, function(data){
 		$("#current_pos").html(data);
 	});
 	//当点击顶部菜单后，隐藏中间的框架
@@ -267,12 +267,12 @@ function _M(menuid,targetUrl) {
 }
 function _MP(menuid,targetUrl) {
 	$("#menuid").val(menuid);
-	$("#paneladd").html('<a class="panel-add" href="javascript:add_panel();"><em><?php echo L('add')?></em></a>');
+	$("#paneladd").html('<a class="panel->add" href="javascript:add_panel();"><em><?php echo L('add')?></em></a>');
 
 	$("#rightMain").attr('src', targetUrl+'&menuid='+menuid+'&pc_hash='+pc_hash);
 	$('.sub_menu').removeClass("on fb blue");
 	$('#_MP'+menuid).addClass("on fb blue");
-	$.get("?m=admin&c=index&a=public_current_pos&menuid="+menuid, function(data){
+	$.get("?m=Admin&c=Index&a=publicCurrentPos&menuid="+menuid, function(data){
 		$("#current_pos").html(data+'<span id="current_pos_attr"></span>');
 	});
 	$("#current_pos").data('clicknum', 1);
@@ -306,7 +306,7 @@ function add_panel() {
 	var menuid = $("#menuid").val();
 	$.ajax({
 		type: "POST",
-		url: "?m=admin&c=index&a=public_ajax_add_panel",
+		url: "?m=Admin&c=Index&a=publicAjaxAddPanel",
 		data: "menuid=" + menuid,
 		success: function(data){
 			if(data) {
@@ -318,7 +318,7 @@ function add_panel() {
 function delete_panel(menuid, id) {
 	$.ajax({
 		type: "POST",
-		url: "?m=admin&c=index&a=public_ajax_delete_panel",
+		url: "?m=Admin&c=Index&a=publicAjaxDeletePanel",
 		data: "menuid=" + menuid,
 		success: function(data){
 			$("#panellist").html(data);
@@ -332,10 +332,10 @@ function paneladdclass(id) {
 }
 setInterval("session_life()", 160000);
 function session_life() {
-	$.get("?m=admin&c=index&a=public_session_life");
+	$.get("?m=Admin&c=Index&a=publicSessionLife");
 }
 function lock_screen() {
-	$.get("?m=admin&c=index&a=public_lock_screen");
+	$.get("?m=Admin&c=Index&a=publicLockScreen");
 	$('#dvLockScreen').css('display','');
 }
 function check_screenlock() {
@@ -344,7 +344,7 @@ function check_screenlock() {
 		$('#lock_tips').html('<font color="red"><?php echo L('password_can_not_be_empty');?></font>');
 		return false;
 	}
-	$.get("?m=admin&c=index&a=public_login_screenlock", { lock_password: lock_password},function(data){
+	$.get("?m=Admin&c=Index&a=publicLoginScreenlock", { lock_password: lock_password},function(data){
 		if(data==1) {
 			$('#dvLockScreen').css('display','none');
 			$('#lock_password').val('');

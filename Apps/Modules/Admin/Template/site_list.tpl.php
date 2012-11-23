@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 <div class="pad_10">
 <div class="table-list">
@@ -25,9 +25,9 @@ if(is_array($list)):
 <td align="center"><?php echo $v['name']?></td>
 <td align="center"><?php echo $v['dirname']?></td>
 <td align="center"><?php echo $v['domain']?></td>
-<td align="center"><?php if ($v['siteid']!=1){?><?php echo pc_base::load_config('system', 'html_root')?>/<?php echo $v['dirname'];} else{echo '/';}?></td>
+<td align="center"><?php if ($v['siteid']!=1){?><?php echo C('html_root')?>/<?php echo $v['dirname'];} else{echo '/';}?></td>
 <td align="center"><a href="javascript:edit(<?php echo $v['siteid']?>, '<?php echo  new_addslashes(htmlspecialchars($v['name']))?>')"><?php echo L('edit')?></a> | 
-<?php if($v['siteid']!=1) { ?><a href="?m=admin&c=site&a=del&siteid=<?php echo $v['siteid']?>" onclick="return confirm('<?php echo new_addslashes(htmlspecialchars(L('confirm', array('message'=>$v['name']))))?>')"><?php echo L('delete')?></a><?php } else { ?><font color="#cccccc"><?php echo L('delete')?></font><?php } ?></td>
+<?php if($v['siteid']!=1) { ?><a href="?m=Admin&c=Site&a=del&siteid=<?php echo $v['siteid']?>" onclick="return confirm('<?php echo new_addslashes(htmlspecialchars(L('confirm', array('message'=>$v['name']))))?>')"><?php echo L('delete')?></a><?php } else { ?><font color="#cccccc"><?php echo L('delete')?></font><?php } ?></td>
 </tr>
 <?php 
 	endforeach;
@@ -42,7 +42,7 @@ endif;
 <!--
 function edit(id, name) {
 	window.top.art.dialog({id:'edit'}).close();
-	window.top.art.dialog({title:'<?php echo L('edit_site')?>《'+name+'》',id:'edit',iframe:'?m=admin&c=site&a=edit&siteid='+id,width:'700',height:'500'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;d.document.getElementById('dosubmit').click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
+	window.top.art.dialog({title:'<?php echo L('edit_site')?>《'+name+'》',id:'edit',iframe:'?m=Admin&c=Site&a=edit&siteid='+id,width:'700',height:'500'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;d.document.getElementById('dosubmit').click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
 }
 //-->
 </script>

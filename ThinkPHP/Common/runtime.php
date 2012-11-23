@@ -19,14 +19,14 @@ defined('THINK_PATH') or exit();
 if(version_compare(PHP_VERSION,'5.2.0','<'))  die('require PHP > 5.2.0 !');
 
 //  版本信息
-define('THINK_VERSION', '3.1');
+define('THINK_VERSION', '3.1.2');
 
 //   系统信息
-if(version_compare(PHP_VERSION,'5.3.0','<')) {
-    set_magic_quotes_runtime(0);
+if(version_compare(PHP_VERSION,'5.4.0','<')) {
+    ini_set('magic_quotes_runtime',0);
     define('MAGIC_QUOTES_GPC',get_magic_quotes_gpc()?True:False);
 }else{
-    define('MAGIC_QUOTES_GPC',True);
+    define('MAGIC_QUOTES_GPC',false);
 }
 define('IS_CGI',substr(PHP_SAPI, 0,3)=='cgi' ? 1 : 0 );
 define('IS_WIN',strstr(PHP_OS, 'WIN') ? 1 : 0 );
@@ -75,7 +75,7 @@ defined('LIB_PATH')     or define('LIB_PATH',       APP_PATH.'Lib/'); // 项目�
 defined('CONF_PATH')    or define('CONF_PATH',      APP_PATH.'Conf/'); // 项目配置目录
 defined('LANG_PATH')    or define('LANG_PATH',      APP_PATH.'Lang/'); // 项目语言包目录
 defined('TMPL_PATH')    or define('TMPL_PATH',      APP_PATH.'Tpl/'); // 项目模板目录
-defined('HTML_PATH')    or define('HTML_PATH',      WEB_PATH.'Html/'); // TODO 项目静态目录
+defined('HTML_PATH')    or define('HTML_PATH',      CMS_PATH.'Html/'); // TODO 项目静态目录
 defined('LOG_PATH')     or define('LOG_PATH',       RUNTIME_PATH.'Logs/'); // 项目日志目录
 defined('TEMP_PATH')    or define('TEMP_PATH',      RUNTIME_PATH.'Temp/'); // 项目缓存目录
 defined('DATA_PATH')    or define('DATA_PATH',      RUNTIME_PATH.'Data/'); // 项目数据目录
@@ -88,7 +88,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . VENDOR_PATH);
 function load_runtime_file() {
     // 加载系统基础函数库
     require THINK_PATH.'Common/common.php';
-    // 读取核心编译文件列表
+    // 读取核心文件列表
     $list = array(
         CORE_PATH.'Core/Think.class.php',
         CORE_PATH.'Core/ThinkException.class.php',  // 异常处理类
@@ -98,8 +98,8 @@ function load_runtime_file() {
     foreach ($list as $key=>$file){
         if(is_file($file))  require_cache($file);
     }
-    // 加载系统类库别名定义
-    alias_import(include THINK_PATH.'Conf/alias.php');
+    // TODO　加载系统类库别名定义
+    //alias_import(include THINK_PATH.'Conf/alias.php');
 
     // 检查项目目录结构 如果不存在则自动创建
     if(!is_dir(LIB_PATH)) {
@@ -152,14 +152,13 @@ function build_runtime_cache($append='') {
         $content .= compile($file);
     }
     // 系统行为扩展文件统一编译
-    if(C('app_tags_on')) {
-        $content .= build_tags_cache();
-    }
-    $alias      = include THINK_PATH.'Conf/alias.php';
-    $content   .= 'alias_import('.var_export($alias,true).');';
+    $content .= build_tags_cache();
+    
+    //$alias      = include THINK_PATH.'Conf/alias.php';
+    //$content   .= 'alias_import('.var_export($alias,true).');';
     // 编译框架默认语言包和配置参数
     $content   .= $append."\nL(".var_export(L(),true).");C(".var_export(C(),true).');G(\'loadTime\');Think::Start();';
-    file_put_contents(RUNTIME_FILE,strip_whitespace('<?php '.$content));
+    file_put_contents(RUNTIME_FILE,strip_whitespace('<?php '.str_replace("defined('THINK_PATH') or exit();",' ',$content)));
 }
 
 // 编译系统行为扩展类库
@@ -239,5 +238,6 @@ function build_dir_secure($dirs='') {
 load_runtime_file();
 // 记录加载文件时间
 G('loadTime');
+
 // 执行入口
 Think::Start();

@@ -46,18 +46,18 @@ function halt($error) {
         }
     } else {
         //否则定向到错误页面
-        $error_page         = C('error_page');
+        $error_page         = C('ERROR_PAGE');
         if (!empty($error_page)) {
             redirect($error_page);
         } else {
-            if (C('show_error_msg'))
+            if (C('SHOW_ERROR_MSG'))
                 $e['message'] = is_array($error) ? $error['message'] : $error;
             else
-                $e['message'] = C('error_message');
+                $e['message'] = C('ERROR_MESSAGE');
         }
     }
     // 包含异常页面模板
-    include C('tmpl_exception_file');
+    include C('TMPL_EXCEPTION_FILE');
     exit;
 }
 
@@ -97,7 +97,7 @@ function dump($var, $echo=true, $label=null, $strict=true) {
         var_dump($var);
         $output = ob_get_clean();
         if (!extension_loaded('xdebug')) {
-            $output = preg_replace("/\]\=\>\n(\s+)/m", '] => ', $output);
+            $output = preg_replace('/\]\=\>\n(\s+)/m', '] => ', $output);
             $output = '<pre>' . $label . htmlspecialchars($output, ENT_QUOTES) . '</pre>';
         }
     }
@@ -118,7 +118,7 @@ function dump($var, $echo=true, $label=null, $strict=true) {
  */
 function _404($msg='',$url='') {
     APP_DEBUG && throw_exception($msg);
-    if($msg && C('log_exception_record')) Log::write($msg);
+    if($msg && C('LOG_EXCEPTION_RECORD')) Log::write($msg);
     if(empty($url) && C('URL_404_REDIRECT')) {
         $url    =   C('URL_404_REDIRECT');
     }
@@ -149,7 +149,7 @@ function layout($layout) {
 
 /**
  * URL组装 支持不同URL模式
- * @param string $url URL表达式，格式：'[模块/控制器/操作@域名]?参数1=值1&参数2=值2...'
+ * @param string $url URL表达式，格式：'[分组/模块/操作#锚点@域名]?参数1=值1&参数2=值2...'
  * @param string|array $vars 传入的参数，支持数组和字符串
  * @param string $suffix 伪静态后缀，默认为true表示获取配置值
  * @param boolean $redirect 是否跳转，如果设置为true则表示跳转到该URL地址
@@ -160,7 +160,15 @@ function U($url='',$vars='',$suffix=true,$redirect=false,$domain=false) {
     // 解析URL
     $info   =  parse_url($url);
     $url    =  !empty($info['path'])?$info['path']:ACTION_NAME;
-    if(false !== strpos($url,'@')) { // 解析域名
+    if(isset($info['fragment'])) { // 解析锚点
+        $anchor =   $info['fragment'];
+        if(false !== strpos($anchor,'?')) { // 解析参数
+            list($anchor,$info['query']) = explode('?',$anchor,2);
+        }        
+        if(false !== strpos($anchor,'@')) { // 解析域名
+            list($anchor,$host)    =   explode('@',$anchor, 2);
+        }
+    }elseif(false !== strpos($url,'@')) { // 解析域名
         list($url,$host)    =   explode('@',$info['path'], 2);
     }
     // 解析子域名
@@ -168,10 +176,10 @@ function U($url='',$vars='',$suffix=true,$redirect=false,$domain=false) {
         $domain = $host.(strpos($host,'.')?'':strstr($_SERVER['HTTP_HOST'],'.'));
     }elseif($domain===true){
         $domain = $_SERVER['HTTP_HOST'];
-        if(C('app_sub_domain_deploy') ) { // 开启子域名部署
+        if(C('APP_SUB_DOMAIN_DEPLOY') ) { // 开启子域名部署
             $domain = $domain=='localhost'?'localhost':'www'.strstr($_SERVER['HTTP_HOST'],'.');
-            // '子域名'=>array('项目[/模块]');
-            foreach (C('app_sub_domain_rules') as $key => $rule) {
+            // '子域名'=>array('项目[/分组]');
+            foreach (C('APP_SUB_DOMAIN_RULES') as $key => $rule) {
                 if(false === strpos($key,'*') && 0=== strpos($url,$rule[0])) {
                     $domain = $key.strstr($domain,'.'); // 生成对应子域名
                     $url    =  substr_replace($url,'',0,strlen($rule[0]));
@@ -191,9 +199,9 @@ function U($url='',$vars='',$suffix=true,$redirect=false,$domain=false) {
         parse_str($info['query'],$params);
         $vars = array_merge($params,$vars);
     }
-
+    
     // URL组装
-    $depr = C('url_pathinfo_depr');
+    $depr = C('URL_PATHINFO_DEPR');
     if($url) {
         if(0=== strpos($url,'/')) {// 定义路由
             $route      =   true;
@@ -205,32 +213,45 @@ function U($url='',$vars='',$suffix=true,$redirect=false,$domain=false) {
             if('/' != $depr) { // 安全替换
                 $url    =   str_replace('/',$depr,$url);
             }
-            // 解析模块、控制器和操作
+            // 解析分组、模块和操作
             $url        =   trim($url,$depr);
             $path       =   explode($depr,$url);
             $var        =   array();
-            $var[C('var_action')]       =   !empty($path)?array_pop($path):ACTION_NAME;
-            $var[C('var_controler')]       =   !empty($path)?array_pop($path):CONTROLER_NAME;
-            if(C('url_case_insensitive')) {
-                $var[C('var_controler')]   =   parse_name($var[C('var_controler')]);
-            }
-            if(!C('app_sub_domain_deploy') && C('app_module_list')) {
-                if(!empty($path)) {
-                    $module                  =   array_pop($path);
-                    $var[C('var_module')]    =   $module;
-                }else{
-                    if(MODULE_NAME != C('default_module')) {
-                        $var[C('var_module')]=   MODULE_NAME;
+            $var[C('VAR_ACTION')]       =   !empty($path)?array_pop($path):ACTION_NAME;
+            $var[C('VAR_MODULE')]       =   !empty($path)?array_pop($path):MODULE_NAME;
+            if($maps = C('URL_ACTION_MAP')) {
+                if(isset($maps[strtolower($var[C('VAR_MODULE')])])) {
+                    $maps    =   $maps[strtolower($var[C('VAR_MODULE')])];
+                    if($action = array_search(strtolower($var[C('VAR_ACTION')]),$maps)){
+                        $var[C('VAR_ACTION')] = $action;
                     }
                 }
-                if(C('url_case_insensitive') && isset($var[C('var_module')])) {
-                    $var[C('var_module')]    =  strtolower($var[C('var_module')]);
+            }
+            if($maps = C('URL_MODULE_MAP')) {
+                if($module = array_search(strtolower($var[C('VAR_MODULE')]),$maps)){
+                    $var[C('VAR_MODULE')] = $module;
+                }
+            }            
+            if(C('URL_CASE_INSENSITIVE')) {
+                $var[C('VAR_MODULE')]   =   parse_name($var[C('VAR_MODULE')]);
+            }
+            if(!C('APP_SUB_DOMAIN_DEPLOY') && C('APP_GROUP_LIST')) {
+                if(!empty($path)) {
+                    $group                  =   array_pop($path);
+                    $var[C('VAR_GROUP')]    =   $group;
+                }else{
+                    if(GROUP_NAME != C('DEFAULT_GROUP')) {
+                        $var[C('VAR_GROUP')]=   GROUP_NAME;
+                    }
+                }
+                if(C('URL_CASE_INSENSITIVE') && isset($var[C('VAR_GROUP')])) {
+                    $var[C('VAR_GROUP')]    =  strtolower($var[C('VAR_GROUP')]);
                 }
             }
         }
     }
 
-    if(C('url_model') == 0) { // 普通模式URL转换
+    if(C('URL_MODEL') == 0) { // 普通模式URL转换
         $url        =   __APP__.'?'.http_build_query(array_reverse($var));
         if(!empty($vars)) {
             $vars   =   urldecode(http_build_query($vars));
@@ -243,18 +264,22 @@ function U($url='',$vars='',$suffix=true,$redirect=false,$domain=false) {
             $url    =   __APP__.'/'.implode($depr,array_reverse($var));
         }
         if(!empty($vars)) { // 添加参数
-            foreach ($vars as $var => $val)
-                $url .= $depr.$var . $depr . $val;
+            foreach ($vars as $var => $val){
+                if('' !== trim($val))   $url .= $depr . $var . $depr . $val;
+            }                
         }
         if($suffix) {
-            $suffix   =  $suffix===true?C('url_html_suffix'):$suffix;
+            $suffix   =  $suffix===true?C('URL_HTML_SUFFIX'):$suffix;
             if($pos = strpos($suffix, '|')){
                 $suffix = substr($suffix, 0, $pos);
             }
-            if($suffix && $url[1]){
+            if($suffix && '/' != substr($url,-1)){
                 $url  .=  '.'.ltrim($suffix,'.');
             }
         }
+    }
+    if(isset($anchor)){
+        $url  .= '#'.$anchor;
     }
     if($domain) {
         $url   =  (is_ssl()?'https://':'http://').$domain.$url;
@@ -263,6 +288,39 @@ function U($url='',$vars='',$suffix=true,$redirect=false,$domain=false) {
         redirect($url);
     else
         return $url;
+}
+
+/**
+ * 渲染输出Widget
+ * @param string $name Widget名称
+ * @param array $data 传人的参数
+ * @param boolean $return 是否返回内容 
+ * @return void
+ */
+function W($name, $data=array(), $return=false) {
+    $class      =   $name . 'Widget';
+    require_cache(BASE_LIB_PATH . 'Widget/' . $class . '.class.php');
+    if (!class_exists($class))
+        throw_exception(L('_CLASS_NOT_EXIST_') . ':' . $class);
+    $widget     =   Think::instance($class);
+    $content    =   $widget->render($data);
+    if ($return)
+        return $content;
+    else
+        echo $content;
+}
+
+/**
+ * 过滤器方法 引用传值
+ * @param string $name 过滤器名称
+ * @param string $content 要过滤的内容
+ * @return void
+ */
+function filter($name, &$content) {
+    $class      =   $name . 'Filter';
+    require_cache(BASE_LIB_PATH . 'Filter/' . $class . '.class.php');
+    $filter     =   new $class();
+    $content    =   $filter->run($content);
 }
 
 /**
@@ -311,10 +369,39 @@ function redirect($url, $time=0, $msg='') {
  * 缓存管理
  * @param mixed $name 缓存名称，如果为数组表示进行缓存设置
  * @param mixed $value 缓存值
+ * @param mixed $options 缓存参数
+ * @return mixed
+ */
+function S($name,$value='',$options=null) {
+    static $cache   =   '';
+    if(is_array($options)){
+        // 缓存操作的同时初始化
+        $type       =   isset($options['type'])?$options['type']:'';
+        $cache      =   Cache::getInstance($type,$options);
+    }elseif(is_array($name)) { // 缓存初始化
+        $type       =   isset($name['type'])?$name['type']:'';
+        $cache      =   Cache::getInstance($type,$name);
+        return $cache;
+    }elseif(empty($cache)) { // 自动初始化
+        $cache      =   Cache::getInstance();
+    }
+    if(''=== $value){ // 获取缓存
+        return $cache->get($name);
+    }elseif(is_null($value)) { // 删除缓存
+        return $cache->rm($name);
+    }else { // 缓存数据
+        $expire     =   is_numeric($options)?$options:NULL;
+        return $cache->set($name, $value, $expire);
+    }
+}
+/**
+ * 缓存管理
+ * @param mixed $name 缓存名称，如果为数组表示进行缓存设置
+ * @param mixed $value 缓存值
  * @param mixed $expire 缓存有效期（秒）
  * @return mixed
  */
-function cache($name,$value='',$options=0) {
+function cache($name,$value='',$options=0,$expire = null) {
     static $cache   =   '';
     if(is_array($options)){
         // 缓存操作的同时初始化
@@ -328,50 +415,14 @@ function cache($name,$value='',$options=0) {
     }elseif(empty($cache)) { // 自动初始化
         $cache      =   Cache::getInstance();
     }
-    if(''=== $value){ // 获取缓存值
+    if(is_string($value)){ // 获取缓存值
         // 获取缓存数据
-        return $cache->get($name);
+        return $cache->get($name,$value);
     }elseif(is_null($value)) { // 删除缓存
-        return $cache->rm($name);
+        return $cache->rm($name,$options);
     }else { // 缓存数据
-        $options     =   is_numeric($options)?$options:NULL;
-        return $cache->set($name, $value, $options);
+        return $cache->set($name, $value,$expire,$options);
     }
-}
-
-/**
- * 全局缓存设置和读取
- * @param string $name 缓存名称
- * @param mixed $value 缓存值
- * @param integer $expire 缓存有效期（秒）
- * @param string $type 缓存类型
- * @param array $options 缓存参数
- * @return mixed
- */
-function S($name, $value='', $expire=null, $type='',$options=null) {
-    static $_cache = array();
-    //取得缓存对象实例
-    $cache = Cache::getInstance($type,$options);
-    if ('' !== $value) {
-        if (is_null($value)) {
-            // 删除缓存
-            $result = $cache->rm($name);
-            if ($result)
-                unset($_cache[$type . '_' . $name]);
-            return $result;
-        }else {
-            // 缓存数据
-            $cache->set($name, $value, $expire);
-            $_cache[$type . '_' . $name] = $value;
-        }
-        return;
-    }
-    if (isset($_cache[$type . '_' . $name]))
-        return $_cache[$type . '_' . $name];
-    // 获取缓存数据
-    $value = $cache->get($name);
-    $_cache[$type . '_' . $name] = $value;
-    return $value;
 }
 
 /**
@@ -387,7 +438,7 @@ function F($name, $value='', $path=DATA_PATH) {
     if ('' !== $value) {
         if (is_null($value)) {
             // 删除缓存
-            return unlink($filename);
+            return false !== strpos($name,'*')?array_map("unlink", glob($filename)):unlink($filename);
         } else {
             // 缓存数据
             $dir            =   dirname($filename);
@@ -395,14 +446,14 @@ function F($name, $value='', $path=DATA_PATH) {
             if (!is_dir($dir))
                 mkdir($dir,0755,true);
             $_cache[$name]  =   $value;
-            return file_put_contents($filename, json_encode($value));
+            return file_put_contents($filename, strip_whitespace("<?php\treturn " . var_export($value, true) . ";?>"));
         }
     }
     if (isset($_cache[$name]))
         return $_cache[$name];
     // 获取缓存数据
     if (is_file($filename)) {
-        $value          =   json_decode(file_get_contents($filename),true);
+        $value          =   include $filename;
         $_cache[$name]  =   $value;
     } else {
         $value          =   false;
@@ -494,11 +545,11 @@ function data_to_xml($data) {
  * @return mixed
  */
 function session($name,$value='') {
-    $prefix   =  C('session_prefix');
+    $prefix   =  C('SESSION_PREFIX');
     if(is_array($name)) { // session初始化 在session_start 之前调用
         if(isset($name['prefix'])) C('SESSION_PREFIX',$name['prefix']);
-        if(C('var_session_id') && isset($_REQUEST[C('var_session_id')])){
-            session_id($_REQUEST[C('var_session_id')]);
+        if(C('VAR_SESSION_ID') && isset($_REQUEST[C('VAR_SESSION_ID')])){
+            session_id($_REQUEST[C('VAR_SESSION_ID')]);
         }elseif(isset($name['id'])) {
             session_id($name['id']);
         }
@@ -512,8 +563,8 @@ function session($name,$value='') {
         if(isset($name['cache_limiter']))   session_cache_limiter($name['cache_limiter']);
         if(isset($name['cache_expire']))    session_cache_expire($name['cache_expire']);
         if(isset($name['type']))            C('SESSION_TYPE',$name['type']);
-        if(C('session_type')) { // 读取session驱动
-            $class      = 'Session'. ucwords(strtolower(C('session_type')));
+        if(C('SESSION_TYPE')) { // 读取session驱动
+            $class      = 'Session'. ucwords(strtolower(C('SESSION_TYPE')));
             // 检查驱动类
             if(require_cache(EXTEND_PATH.'Driver/Session/'.$class.'.class.php')) {
                 $hander = new $class();
@@ -524,7 +575,7 @@ function session($name,$value='') {
             }
         }
         // 启动session
-        if(C('session_auto_start'))  session_start();
+        if(C('SESSION_AUTO_START'))  session_start();
     }elseif('' === $value){ 
         if(0===strpos($name,'[')) { // session 操作
             if('[pause]'==$name){ // 暂停session
@@ -584,13 +635,13 @@ function session($name,$value='') {
 function cookie($name, $value='', $option=null) {
     // 默认设置
     $config = array(
-        'prefix'    =>  C('cookie_prefix'), // cookie 名称前缀
-        'expire'    =>  C('cookie_expire'), // cookie 保存时间
-        'path'      =>  C('cookie_path'), // cookie 保存路径
-        'domain'    =>  C('cookie_domain'), // cookie 有效域名
+        'prefix'    =>  C('COOKIE_PREFIX'), // cookie 名称前缀
+        'expire'    =>  C('COOKIE_EXPIRE'), // cookie 保存时间
+        'path'      =>  C('COOKIE_PATH'), // cookie 保存路径
+        'domain'    =>  C('COOKIE_DOMAIN'), // cookie 有效域名
     );
     // 参数设置(会覆盖黙认设置)
-    if (!empty($option)) {
+    if (!is_null($option)) {
         if (is_numeric($option))
             $option = array('expire' => $option);
         elseif (is_string($option))
@@ -615,14 +666,26 @@ function cookie($name, $value='', $option=null) {
     }
     $name = $config['prefix'] . $name;
     if ('' === $value) {
-        return isset($_COOKIE[$name]) ? json_decode(MAGIC_QUOTES_GPC?stripslashes($_COOKIE[$name]):$_COOKIE[$name]) : null; // 获取指定Cookie
+        if(isset($_COOKIE[$name])){
+            $value =    $_COOKIE[$name];
+            if(0===strpos($value,'think:')){
+                $value  =   substr($value,6);
+                return array_map('urldecode',json_decode(MAGIC_QUOTES_GPC?stripslashes($value):$value,true));
+            }else{
+                return $value;
+            }
+        }else{
+            return null;
+        }
     } else {
         if (is_null($value)) {
             setcookie($name, '', time() - 3600, $config['path'], $config['domain']);
             unset($_COOKIE[$name]); // 删除指定cookie
         } else {
             // 设置cookie
-            $value  = json_encode($value);
+            if(is_array($value)){
+                $value  = 'think:'.json_encode(array_map('urlencode',$value));
+            }
             $expire = !empty($config['expire']) ? time() + intval($config['expire']) : 0;
             setcookie($name, $value, $expire, $config['path'], $config['domain']);
             $_COOKIE[$name] = $value;
@@ -636,16 +699,16 @@ function cookie($name, $value='', $option=null) {
  */
 function load_ext_file() {
     // 加载自定义外部文件
-    if(C('load_ext_file')) {
-        $files      =  explode(',',C('load_ext_file'));
+    if(C('LOAD_EXT_FILE')) {
+        $files      =  explode(',',C('LOAD_EXT_FILE'));
         foreach ($files as $file){
             $file   = COMMON_PATH.$file.'.php';
             if(is_file($file)) include $file;
         }
     }
     // 加载自定义的动态配置文件
-    if(C('load_ext_config')) {
-        $configs    =  C('load_ext_config');
+    if(C('LOAD_EXT_CONFIG')) {
+        $configs    =  C('LOAD_EXT_CONFIG');
         if(is_string($configs)) $configs =  explode(',',$configs);
         foreach ($configs as $key=>$config){
             $file   = CONF_PATH.$config.'.php';
@@ -676,7 +739,7 @@ function get_client_ip($type = 0) {
         $ip     =   $_SERVER['REMOTE_ADDR'];
     }
     // IP地址合法验证
-    $long = ip2long($ip);
+    $long = sprintf("%u",ip2long($ip));
     $ip   = $long ? array($ip, $long) : array('0.0.0.0', 0);
     return $ip[$type];
 }
@@ -705,5 +768,12 @@ function send_http_status($code) {
         header('HTTP/1.1 '.$code.' '.$_status[$code]);
         // 确保FastCGI模式下正常
         header('Status:'.$code.' '.$_status[$code]);
+    }
+}
+
+// 过滤表单中的表达式
+function filter_exp(&$value){
+    if (in_array(strtolower($value),array('exp','or'))){
+        $value .= ' ';
     }
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8 echo CHARSET?>" />
+<meta http-equiv="Content-Type" content="text/html; charset=<?php echo CHARSET;?>" />
 <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
 <title><?php echo L('phpcms_logon')?></title>
 <style type="text/css">
@@ -32,7 +32,7 @@
 <body onload="javascript:document.myform.code.focus();">
 <div id="login_bg" class="login_box">
 	<div class="login_iptbox">
-   	 <form action="index.php?m=admin&c=index&a=public_card&card=1&dosubmit=1" method="post" name="myform"><input name="dosubmit" value="" type="submit" class="login_tj_btn" />
+   	 <form action="index.php?m=Admin&c=Index&a=publicCard&card=1&dosubmit=1" method="post" name="myform"><input name="dosubmit" value="" type="submit" class="login_tj_btn" />
    	<input type="hidden" name="rand" value="<?php echo $rand['rand']?>" />
    	  <input type="text" name="code" id="code" class="ipt"  /> <img src="<?php echo $rand['url']?>" height="24" class="img_boxs" />
    	  <div id="yzm" class="yzm" style="display:block"><?php echo L('please_input_your_password_the_picture_corresponding_location_6_digits')?></div>

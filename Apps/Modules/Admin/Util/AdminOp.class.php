@@ -3,14 +3,14 @@ defined('APP_NAME') or exit('No permission resources.');
 
 //定义在后台
 define('IN_ADMIN',true);
-class admin_op {
+class AdminOp {
 	public function __construct() {
-		$this->db = pc_base::load_model('admin_model');
+		$this->db = M('Admin');
 	}
 	/*
 	 * 修改密码
 	 */
-	public function edit_password($userid, $password){
+	public function editPassword($userid, $password){
 		$userid = intval($userid);
 		if($userid < 1) return false;
 		if(!is_password($password))
@@ -19,14 +19,14 @@ class admin_op {
 			return false;
 		}
 		$passwordinfo = password($password);
-		return $this->db->update($passwordinfo,array('userid'=>$userid));
+		return $this->db->data($passwordinfo)->where(array('userid'=>$userid))->save();
 	}
 	/*
 	 * 检查用户名重名
 	 */	
 	public function checkname($username) {
 		$username =  trim($username);
-		if ($this->db->get_one(array('username'=>$username),'userid')){
+		if ($this->db->where(array('username'=>$username))->field('userid')->find()){
 			return false;
 		}
 		return true;

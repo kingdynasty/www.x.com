@@ -55,12 +55,13 @@ return  array(
     /* 数据缓存设置 */
     'DATA_CACHE_TIME'       => 0,      // 数据缓存有效期 0表示永久缓存
     'DATA_CACHE_COMPRESS'   => false,   // 数据缓存是否压缩缓存
+	'data_cache_datatype'   => 'array',		/*缓存格式：array数组，serialize序列化，null字符串*/
     'DATA_CACHE_CHECK'      => false,   // 数据缓存是否校验缓存
     'DATA_CACHE_PREFIX'     => '',     // 缓存前缀
     'DATA_CACHE_TYPE'       => 'File',  // 数据缓存类型,支持:File|Db|Apc|Memcache|Shmop|Sqlite|Xcache|Apachenote|Eaccelerator
-    'DATA_CACHE_PATH'       => TEMP_PATH,// 缓存路径设置 (仅对File方式缓存有效)
+    'DATA_CACHE_PATH'       => DATA_PATH,// 缓存路径设置 (仅对File方式缓存有效)
     'DATA_CACHE_SUBDIR'     => false,    // 使用子目录缓存 (自动根据缓存标识的哈希创建子目录)
-    'DATA_PATH_LEVEL'       => 1,        // 子目录缓存级别
+    //'DATA_PATH_LEVEL'       => 1,        // 子目录缓存级别
 
     /* 错误设置 */
     'ERROR_MESSAGE'         => '页面错误！请稍后再试～',//错误显示信息,非调试模式有效
@@ -75,14 +76,20 @@ return  array(
     'LOG_LEVEL'             => 'EMERG,ALERT,CRIT,ERR',// 允许记录的日志级别
     'LOG_FILE_SIZE'         => 2097152,	// 日志文件大小限制
     'LOG_EXCEPTION_RECORD'  => false,    // 是否记录异常信息日志
+    'admin_log'=>0,//是否记录后台操作日志
 
     /* SESSION设置 */
     'SESSION_AUTO_START'    => true,    // 是否自动开启Session
     'SESSION_OPTIONS'       => array('type'=>'Db','expire'=>1800,'path'=>CACHE_PATH.'Sessions/'), // session 配置数组 支持type name id path expire domian 等参数
-    'SESSION_TYPE'          => '', // session hander类型 默认无需设置 除非扩展了session hander驱动
+    'SESSION_TYPE'          => 'Db', // session hander类型 默认无需设置 除非扩展了session hander驱动
     'SESSION_PREFIX'        => '', // session 前缀
     //'VAR_SESSION_ID'      => 'session_id',     //sessionID的提交变量
-
+	/*语言相关设置*/
+	'LANG_SWITCH_ON' => true,
+	'DEFAULT_LANG' => 'zh-cn', // 默认语言
+	'LANG_AUTO_DETECT' => true, // 自动侦测语言
+	'LANG_LIST'=>'en,zh-cn',//必须写可允许的语言列表
+	'LANG_FILE_DEPR'=>'.',
     /* 模板引擎设置 */
     'TMPL_CONTENT_TYPE'     => 'text/html', // 默认模板输出类型
     'TMPL_ACTION_ERROR'     => THINK_PATH.'Tpl/dispatch_jump.tpl', // 默认错误跳转对应的模板文件
@@ -91,6 +98,13 @@ return  array(
     'TMPL_DETECT_THEME'     => false,       // 自动侦测模板主题
     'TMPL_TEMPLATE_SUFFIX'  => '.html',     // 默认模板文件后缀
     'TMPL_FILE_DEPR'        =>  '/', //模板文件CONTROLER_NAME与ACTION_NAME之间的分割符，只对项目模块部署有效
+	'tmpl_parse_string' => array
+		(
+				'__UPLOAD__' => '/Uploads/',
+				'__IMG__' =>'/Statics/images/',
+				'__JS__' => '/Statics/js/',
+				'__CSS__' => '/Statics/css/'
+		),
 
     /* URL设置 */
     'URL_CASE_INSENSITIVE'  => false,   // 默认false 表示URL区分大小写 true则表示不区分大小写
@@ -106,7 +120,7 @@ return  array(
     'VAR_CONTROLER'            => 'c',		// 默认控制器获取变量
     'VAR_ACTION'            => 'a',		// 默认操作获取变量
     'VAR_AJAX_SUBMIT'       => 'ajax',  // 默认的AJAX提交变量
-    'VAR_PATHINFO'          => 's',	// PATHINFO 兼容模式获取变量例如 ?s=/controler/action/id/1 后面的参数取决于URL_PATHINFO_DEPR
+    'VAR_PATHINFO'          => 'p',	// PATHINFO 兼容模式获取变量例如 ?s=/controler/action/id/1 后面的参数取决于URL_PATHINFO_DEPR
     'VAR_URL_PARAMS'        => '_URL_', // PATHINFO URL参数变量
     'VAR_TEMPLATE'          => 't',		// 默认模板切换变量
     'VAR_FILTERS'           =>  '',     // 全局系统变量的默认过滤方法 多个用逗号分割
@@ -114,4 +128,56 @@ return  array(
     'OUTPUT_ENCODE'         =>  true, // 页面压缩输出
     'HTTP_CACHE_CONTROL'    =>  'private', // 网页缓存控制
 
+		'pc_version' => 'V9.2.4',	//phpcms 版本号
+		'pc_release' => '20121112',	//phpcms 更新日期
+		//网站路径
+		'site_path' => '/',
+
+		
+		//附件相关配置
+		'upload_path' => CMS_PATH.'UploadFile/',
+		'upload_url' => 'http://www.x.com/UploadFile/', //附件路径
+		'attachment_stat' => '1',//是否记录附件使用状态 0 统计 1 统计， 注意: 本功能会加重服务器负担
+		
+		'js_path' => 'http://www.x.com/Statics/js', //CDN JS
+		'css_path' => 'http://www.x.com/Statics/css/', //CDN CSS
+		'img_path' => 'http://www.x.com/Statics/images/', //CDN img
+		'app_url' => 'http://www.x.com/',//动态域名配置地址
+		
+		'charset' => 'utf-8', //网站字符集
+		'timezone' => 'Etc/GMT-8', //网站时区（只对php 5.1以上版本有效），Etc/GMT-8 实际表示的是 GMT+8
+		'debug' => 1, //是否显示调试信息
+		'admin_log' => 0, //是否记录后台操作日志
+		'errorlog' => 1, //1、保存错误日志到 cache/error_log.php | 0、在页面直接显示
+		'gzip' => 1, //是否Gzip压缩后输出
+		'auth_key' => 'mfIan89XPYVk4F1yGL8S', //密钥
+		'lang' => 'zh-cn',  //网站语言包
+		'lock_ex' => '1',  //写入缓存时是否建立文件互斥锁定（如果使用nfs建议关闭）
+		
+		'admin_founders' => '1', //网站创始人ID，多个ID逗号分隔
+		'execution_sql' => 0, //EXECUTION_SQL
+		
+		'phpsso' => '1',	//是否使用phpsso
+		'phpsso_appid' => '1',	//应用id
+		'phpsso_api_url' => 'http://www.c.com/phpsso_server',	//接口地址
+		'phpsso_auth_key' => 'doykD1ntfcO9FthMMQd0gAo9HWlTvvFv', //加密密钥
+		'phpsso_version' => '1', //phpsso版本
+
+		'safe_card'=>'1',//是否启用口令卡
+		
+		'connect_enable' => '1',	//是否开启外部通行证/////////////////zS20255		'sina_akey' => '',	//sina AKEY
+		'sina_skey' => '',	//sina SKEY
+		
+		'snda_akey' => '',	//盛大通行证 akey
+		'snda_skey' => '',	//盛大通行证 skey
+		
+		'qq_akey' => '',	//qq skey
+		'qq_skey' => '',	//qq skey
+		
+		'qq_appkey' => '',	//QQ号码登录 appkey
+		'qq_appid' => '',	//QQ号码登录 appid
+		'qq_callback' => '',	//QQ号码登录 callback
+		
+		'plugin_debug' => '0',
+		'admin_url' => '',	//允许访问后台的域名	
 );

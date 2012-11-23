@@ -1,12 +1,12 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 <script type="text/javascript">
 <!--
 	$(function(){
 		$.formValidator.initConfig({formid:"myform",autotip:true,onerror:function(msg,obj){window.top.art.dialog({content:msg,lock:true,width:'200',height:'50'}, function(){this.close();$(obj).focus();})}});
-		$("#name").formValidator({onshow:"<?php echo L('input').L('release_point_name')?>",onfocus:"<?php echo L('input').L('release_point_name')?>"}).inputValidator({min:1,onerror:"<?php echo L('input').L('release_point_name')?>"}).ajaxValidator({type : "get",url : "",data :"m=admin&c=release_point&a=public_name",datatype : "html",async:'false',success : function(data){	if( data == "1" ){return true;}else{return false;}},buttons: $("#dosubmit"),onerror : "<?php echo L('release_point_name').L('exists')?>",onwait : "<?php echo L('connecting')?>"});
+		$("#name").formValidator({onshow:"<?php echo L('input').L('release_point_name')?>",onfocus:"<?php echo L('input').L('release_point_name')?>"}).inputValidator({min:1,onerror:"<?php echo L('input').L('release_point_name')?>"}).ajaxValidator({type : "get",url : "",data :"m=Admin&c=ReleasePoint&a=publicName",datatype : "html",async:'false',success : function(data){	if( data == "1" ){return true;}else{return false;}},buttons: $("#dosubmit"),onerror : "<?php echo L('release_point_name').L('exists')?>",onwait : "<?php echo L('connecting')?>"});
 		$("#host").formValidator({onshow:"<?php echo L('input').L('server_address')?>",onfocus:"<?php echo L('input').L('server_address')?>"}).inputValidator({min:1,onerror:"<?php echo L('input').L('server_address')?>"});
 		$("#port").formValidator({onshow:"<?php echo L('input').L('server_port')?>",onfocus:"<?php echo L('input').L('server_port')?>",defaultvalue:'21'}).inputValidator({min:1,onerror:"<?php echo L('input').L('server_port')?>"}).regexValidator({datatype:'enum',regexp:'intege1',onerror:'<?php echo L('server_ports_must_be_integers')?>'}).defaultPassed();
 		$("#username").formValidator({onshow:"<?php echo L('input').L('username')?>",onfocus:"<?php echo L('input').L('username')?>"}).inputValidator({min:1,onerror:"<?php echo L('input').L('username')?>"});
@@ -16,7 +16,7 @@ include $this->admin_tpl('header');
 //-->
 </script>
 <div class="pad-10">
-<form action="?m=admin&c=release_point&a=add" method="post" id="myform">
+<form action="?m=Admin&c=ReleasePoint&a=add" method="post" id="myform">
 <fieldset>
 	<legend><?php echo L('basic_configuration')?></legend>
 	<table width="100%"  class="table_form">

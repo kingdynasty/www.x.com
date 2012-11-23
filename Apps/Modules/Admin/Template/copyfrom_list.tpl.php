@@ -1,10 +1,10 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_dialog = 1;
-include $this->admin_tpl('header','admin');
+include Admin::adminTpl('header','admin');
 ?>
 <div class="pad-lr-10">
-<form name="myform" id="myform" action="?m=admin&c=copyfrom&a=listorder" method="post">
+<form name="myform" id="myform" action="?m=Admin&c=Copyfrom&a=listorder" method="post">
 <div class="table-list">
  <table width="100%" cellspacing="0">
         <thead>
@@ -42,12 +42,12 @@ foreach($datas as $r) {
 <!--
 function edit(id, name) {
 	window.top.art.dialog({id:'edit'}).close();
-	window.top.art.dialog({title:'<?php echo L('edit');?>《'+name+'》',id:'edit',iframe:'?m=admin&c=copyfrom&a=edit&id='+id,width:'580',height:'240'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;d.document.getElementById('dosubmit').click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
+	window.top.art.dialog({title:'<?php echo L('edit');?>《'+name+'》',id:'edit',iframe:'?m=Admin&c=Copyfrom&a=edit&id='+id,width:'580',height:'240'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;d.document.getElementById('dosubmit').click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
 }
 function data_delete(obj,id,name){
 	window.top.art.dialog({content:name, fixed:true, style:'confirm', id:'data_delete'}, 
 	function(){
-	$.get('?m=admin&c=copyfrom&a=delete&id='+id+'&pc_hash='+pc_hash,function(data){
+	$.get('?m=Admin&c=Copyfrom&a=delete&id='+id+'&pc_hash='+pc_hash,function(data){
 				if(data) {
 					$(obj).parent().parent().fadeOut("slow");
 				}

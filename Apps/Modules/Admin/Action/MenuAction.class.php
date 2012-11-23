@@ -1,27 +1,27 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 
 class MenuAction extends BaseAction {
 	function __construct() {
 		parent::__construct();
-		$this->db = pc_base::load_model('menu_model');
+		$this->db = M('Menu');
 	}
 	
 	function init () {
-		$tree = pc_base::load_sys_class('tree');
+		$tree = vendor('Pc.Tree','',1);
 		$tree->icon = array('&nbsp;&nbsp;&nbsp;│ ','&nbsp;&nbsp;&nbsp;├─ ','&nbsp;&nbsp;&nbsp;└─ ');
 		$tree->nbsp = '&nbsp;&nbsp;&nbsp;';
 		$userid = $_SESSION['userid'];
-		$admin_username = param::get_cookie('admin_username');
+		$admin_username = cookie('admin_username');
 		
-		$table_name = $this->db->table_name;
+		$table_name = $this->db->tableName;
 	
-		$result = $this->db->select('','*','','listorder ASC,id DESC');
+		$result = $this->db->order('listorder ASC,id DESC')->select();
 		$array = array();
 		foreach($result as $r) {
 			$r['cname'] = L($r['name']);
-			$r['str_manage'] = '<a href="?m=admin&c=menu&a=add&parentid='.$r['id'].'&menuid='.$_GET['menuid'].'">'.L('add_submenu').'</a> | <a href="?m=admin&c=menu&a=edit&id='.$r['id'].'&menuid='.$_GET['menuid'].'">'.L('modify').'</a> | <a href="javascript:confirmurl(\'?m=admin&c=menu&a=delete&id='.$r['id'].'&menuid='.$_GET['menuid'].'\',\''.L('confirm',array('message'=>$r['cname'])).'\')">'.L('delete').'</a> ';
+			$r['str_manage'] = '<a href="?m=Admin&c=Menu&a=add&parentid='.$r['id'].'&menuid='.$_GET['menuid'].'">'.L('add_submenu').'</a> | <a href="?m=Admin&c=Menu&a=edit&id='.$r['id'].'&menuid='.$_GET['menuid'].'">'.L('modify').'</a> | <a href="javascript:confirmurl(\'?m=Admin&c=Menu&a=delete&id='.$r['id'].'&menuid='.$_GET['menuid'].'\',\''.L('confirm',array('message'=>$r['cname'])).'\')">'.L('delete').'</a> ';
 			$array[] = $r;
 		}
 
@@ -32,14 +32,14 @@ class MenuAction extends BaseAction {
 					<td align='center'>\$str_manage</td>
 				</tr>";
 		$tree->init($array);
-		$categorys = $tree->get_tree(0, $str);
-		include $this->admin_tpl('menu');
+		$categorys = $tree->getTree(0, $str);
+		include Admin::adminTpl('menu');
 	}
 	function add() {
 		if(isset($_POST['dosubmit'])) {
-			$this->db->insert($_POST['info']);
+			$this->db->data($_POST['info'])->add();
 			//开发过程中用于自动创建语言包
-			$file = PC_PATH.'languages'.DIRECTORY_SEPARATOR.'zh-cn'.DIRECTORY_SEPARATOR.'system_menu.lang.php';
+			$file = APP_PATH.'languages/zh-cn/system_menu.lang.php';
 			if(file_exists($file)) {
 				$content = file_get_contents($file);
 				$content = substr($content,0,-2);
@@ -56,7 +56,7 @@ class MenuAction extends BaseAction {
 			showmessage(L('add_success'));
 		} else {
 			$show_validator = '';
-			$tree = pc_base::load_sys_class('tree');
+			$tree = vendor('Pc.Tree','',1);
 			$result = $this->db->select();
 			$array = array();
 			foreach($result as $r) {
@@ -66,14 +66,14 @@ class MenuAction extends BaseAction {
 			}
 			$str  = "<option value='\$id' \$selected>\$spacer \$cname</option>";
 			$tree->init($array);
-			$select_categorys = $tree->get_tree(0, $str);
+			$select_categorys = $tree->getTree(0, $str);
 			
-			include $this->admin_tpl('menu');
+			include Admin::adminTpl('menu');
 		}
 	}
 	function delete() {
 		$_GET['id'] = intval($_GET['id']);
-		$this->db->delete(array('id'=>$_GET['id']));
+		$this->db->where(array('id'=>$_GET['id']))->delete();
 		showmessage(L('operation_success'));
 	}
 	
@@ -81,9 +81,9 @@ class MenuAction extends BaseAction {
 		if(isset($_POST['dosubmit'])) {
 			$id = intval($_POST['id']);
 			//print_r($_POST['info']);exit;
-			$this->db->update($_POST['info'],array('id'=>$id));
+			$this->db->data($_POST['info'])->where(array('id'=>$id))->save();
 			//修改语言文件
-			$file = PC_PATH.'languages'.DIRECTORY_SEPARATOR.'zh-cn'.DIRECTORY_SEPARATOR.'system_menu.lang.php';
+			$file = APP_PATH.'Lang/zh-cn/system_menu.lang.php';
 			require $file;
 			$key = $_POST['info']['name'];
 			if(!isset($LANG[$key])) {
@@ -101,9 +101,9 @@ class MenuAction extends BaseAction {
 			showmessage(L('operation_success'));
 		} else {
 			$show_validator = $array = $r = '';
-			$tree = pc_base::load_sys_class('tree');
+			$tree = vendor('Pc.Tree','',1);
 			$id = intval($_GET['id']);
-			$r = $this->db->get_one(array('id'=>$id));
+			$r = $this->db->where(array('id'=>$id))->find();
 			if($r) extract($r);
 			$result = $this->db->select();
 			foreach($result as $r) {
@@ -113,8 +113,8 @@ class MenuAction extends BaseAction {
 			}
 			$str  = "<option value='\$id' \$selected>\$spacer \$cname</option>";
 			$tree->init($array);
-			$select_categorys = $tree->get_tree(0, $str);
-			include $this->admin_tpl('menu');
+			$select_categorys = $tree->getTree(0, $str);
+			include Admin::adminTpl('menu');
 		}
 	}
 	
@@ -124,7 +124,7 @@ class MenuAction extends BaseAction {
 	function listorder() {
 		if(isset($_POST['dosubmit'])) {
 			foreach($_POST['listorders'] as $id => $listorder) {
-				$this->db->update(array('listorder'=>$listorder),array('id'=>$id));
+				$this->db->data(array('listorder'=>$listorder))->where(array('id'=>$id))->save();
 			}
 			showmessage(L('operation_success'));
 		} else {

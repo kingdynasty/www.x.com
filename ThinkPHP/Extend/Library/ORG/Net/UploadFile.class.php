@@ -111,7 +111,7 @@ class UploadFile {//类定义开始
                 $thumbFile		=	explode(',',$this->thumbFile);
                 $thumbPath      =   $this->thumbPath?$this->thumbPath:dirname($filename).'/';
                 // 生成图像缩略图
-                import($this->imageClassPath);
+                import($this->imageClassPath,'',0);
                 for($i=0,$len=count($thumbWidth); $i<$len; $i++) {
                     if(!empty($thumbFile[$i])) {
                         $thumbname  =   $thumbFile[$i];

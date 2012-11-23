@@ -1,20 +1,20 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript"> 
 <!--
 	$(function(){
 		$.formValidator.initConfig({formid:"myform",autotip:true,onerror:function(msg,obj){window.top.art.dialog({content:msg,lock:true,width:'200',height:'50'}, function(){this.close();$(obj).focus();})}});
 		$("#modelid").formValidator({onshow:"<?php echo L('select_model');?>",onfocus:"<?php echo L('select_model');?>",oncorrect:"<?php echo L('input_right');?>"}).inputValidator({min:1,onerror:"<?php echo L('select_model');?>"});
 		$("#catname").formValidator({onshow:"<?php echo L('input_catname');?>",onfocus:"<?php echo L('input_catname');?>",oncorrect:"<?php echo L('input_right');?>"}).inputValidator({min:1,onerror:"<?php echo L('input_catname');?>"});
-		$("#catdir").formValidator({onshow:"<?php echo L('input_dirname');?>",onfocus:"<?php echo L('input_dirname');?>"}).regexValidator({regexp:"^([a-zA-Z0-9、-]|[_]){0,30}$",onerror:"<?php echo L('enter_the_correct_catname');?>"}).inputValidator({min:1,onerror:"<?php echo L('input_dirname');?>"}).ajaxValidator({type : "get",url : "",data :"m=admin&c=category&a=public_check_catdir",datatype : "html",cached:false,getdata:{parentid:'parentid'},async:'false',success : function(data){	if( data == "1" ){return true;}else{return false;}},buttons: $("#dosubmit"),onerror : "<?php echo L('catname_have_exists');?>",onwait : "<?php echo L('connecting');?>"});
+		$("#catdir").formValidator({onshow:"<?php echo L('input_dirname');?>",onfocus:"<?php echo L('input_dirname');?>"}).regexValidator({regexp:"^([a-zA-Z0-9、-]|[_]){0,30}$",onerror:"<?php echo L('enter_the_correct_catname');?>"}).inputValidator({min:1,onerror:"<?php echo L('input_dirname');?>"}).ajaxValidator({type : "get",url : "",data :"m=Admin&c=Category&a=publicCheckCatdir",datatype : "html",cached:false,getdata:{parentid:'parentid'},async:'false',success : function(data){	if( data == "1" ){return true;}else{return false;}},buttons: $("#dosubmit"),onerror : "<?php echo L('catname_have_exists');?>",onwait : "<?php echo L('connecting');?>"});
 		$("#url").formValidator({onshow:" ",onfocus:"<?php echo L('domain_name_format');?>",tipcss:{width:'300px'},empty:true}).inputValidator({onerror:"<?php echo L('domain_name_format');?>"}).regexValidator({regexp:"http:\/\/(.+)\/$",onerror:"<?php echo L('domain_end_string');?>"});
 		$("#template_list").formValidator({onshow:"<?php echo L('template_setting');?>",onfocus:"<?php echo L('template_setting');?>",oncorrect:"<?php echo L('input_right');?>"}).inputValidator({min:1,onerror:"<?php echo L('template_setting');?>"});
 	})
 //-->
 </script>
 
-<form name="myform" id="myform" action="?m=admin&c=category&a=add" method="post">
+<form name="myform" id="myform" action="?m=Admin&c=Category&a=add" method="post">
 <div class="pad-10">
 <div class="col-tab">
 <ul class="tabBut cu-li">
@@ -43,14 +43,14 @@ include $this->admin_tpl('header');?>
 				if($_v['siteid']!=$this->siteid) continue;
 				$model_datas[$_v['modelid']] = $_v['name'];
 			}
-			echo form::select($model_datas,$modelid,'name="info[modelid]" id="modelid" onchange="change_tpl(this.value)"',L('select_model'));
+			echo Form::select($model_datas,$modelid,'name="info[modelid]" id="modelid" onchange="change_tpl(this.value)"',L('select_model'));
 		?>
 		</td>
       </tr>
       <tr>
         <th width="200"><?php echo L('parent_category')?>：</th>
         <td>
-		<?php echo form::select_category('category_content_'.$this->siteid,$parentid,'name="info[parentid]" id="parentid"',L('please_select_parent_category'),0,-1);?>
+		<?php echo Form::selectCategory('category_content_'.$this->siteid,$parentid,'name="info[parentid]" id="parentid"',L('please_select_parent_category'),0,-1);?>
 		</td>
       </tr>
      
@@ -72,7 +72,7 @@ include $this->admin_tpl('header');?>
       </tr>
 	<tr>
         <th><?php echo L('catgory_img')?>：</th>
-        <td><?php echo form::images('info[image]', 'image', $image, 'content');?></td>
+        <td><?php echo Form::images('info[image]', 'image', $image, 'content');?></td>
       </tr>
 	<tr>
         <th><?php echo L('description')?>：</th>
@@ -85,13 +85,13 @@ include $this->admin_tpl('header');?>
       <th><?php echo L('workflow');?>：</th>
       <td>
 	  <?php
-		$workflows = getcache('workflow_'.$this->siteid,'commons');
+		$workflows = cache('workflow_'.$this->siteid,'Commons');
 		if($workflows) {
 			$workflows_datas = array();
 			foreach($workflows as $_k=>$_v) {
 				$workflows_datas[$_v['workflowid']] = $_v['workname'];
 			}
-			echo form::select($workflows_datas,'','name="setting[workflowid]"',L('catgory_not_need_check'));
+			echo Form::select($workflows_datas,'','name="setting[workflowid]"',L('catgory_not_need_check'));
 		} else {
 			echo '<input type="hidden" name="setting[workflowid]" value="">';
 			echo L('add_workflow_tips');
@@ -128,12 +128,12 @@ include $this->admin_tpl('header');?>
       <th><?php echo L('category_urlrules');?>：</th>
       <td><div id="category_php_ruleid" style="display:<?php if($setting['ishtml']) echo 'none';?>">
 	<?php
-		echo form::urlrule('content','category',0,$setting['category_ruleid'],'name="category_php_ruleid"');
+		echo Form::urlrule('content','category',0,$setting['category_ruleid'],'name="category_php_ruleid"');
 	?>
 	</div>
 	<div id="category_html_ruleid" style="display:<?php if(!$setting['ishtml']) echo 'none';?>">
 	<?php
-		echo form::urlrule('content','category',1,$setting['category_ruleid'],'name="category_html_ruleid"');
+		echo Form::urlrule('content','category',1,$setting['category_ruleid'],'name="category_html_ruleid"');
 	?>
 	</div>
 	</td>
@@ -143,12 +143,12 @@ include $this->admin_tpl('header');?>
       <th><?php echo L('show_urlrules');?>：</th>
       <td><div id="show_php_ruleid" style="display:<?php if($setting['content_ishtml']) echo 'none';?>">
 	  <?php
-		echo form::urlrule('content','show',0,$setting['category_ruleid'],'name="show_php_ruleid"');
+		echo Form::urlrule('content','show',0,$setting['category_ruleid'],'name="show_php_ruleid"');
 	?>
 	</div>
 	<div id="show_html_ruleid" style="display:<?php if(!$setting['content_ishtml']) echo 'none';?>">
 	  <?php	
-		echo form::urlrule('content','show',1,$setting['category_ruleid'],'name="show_html_ruleid"');
+		echo Form::urlrule('content','show',1,$setting['category_ruleid'],'name="show_html_ruleid"');
 	?>
 	</div>
 	</td>
@@ -171,7 +171,7 @@ include $this->admin_tpl('header');?>
 <tr>
   <th width="200"><?php echo L('available_styles');?>：</th>
         <td>
-		<?php echo form::select($template_list, $setting['template_list'], 'name="setting[template_list]" id="template_list" onchange="load_file_list(this.value)"', L('please_select'))?> 
+		<?php echo Form::select($template_list, $setting['template_list'], 'name="setting[template_list]" id="template_list" onchange="load_file_list(this.value)"', L('please_select'))?> 
 		</td>
 </tr>
 		<tr>
@@ -220,7 +220,7 @@ include $this->admin_tpl('header');?>
 			    </thead>
 				 <tbody>
 				<?php
-				$roles = getcache('role','commons');
+				$roles = cache('role','Commons');
 				foreach($roles as $roleid=> $rolrname) {
 				$disabled = $roleid==1 ? 'disabled' : '';
 				?>
@@ -255,7 +255,7 @@ include $this->admin_tpl('header');?>
 			    </thead>
 				 <tbody>
 			<?php
-			$group_cache = getcache('grouplist','member');
+			$group_cache = cache('grouplist','member');
 			foreach($group_cache as $_key=>$_value) {
 			if($_value['groupid']==1) continue;
 			?>
@@ -316,12 +316,12 @@ include $this->admin_tpl('header');?>
 	}
 	function change_tpl(modelid) {
 		if(modelid) {
-			$.getJSON('?m=admin&c=category&a=public_change_tpl&modelid='+modelid, function(data){$('#template_list').val(data.template_list);$('#category_template').html(data.category_template);$('#list_template').html(data.list_template);$('#show_template').html(data.show_template);});
+			$.getJSON('?m=Admin&c=Category&a=publicChangeTpl&modelid='+modelid, function(data){$('#template_list').val(data.template_list);$('#category_template').html(data.category_template);$('#list_template').html(data.list_template);$('#show_template').html(data.show_template);});
 		}
 	}
 	function load_file_list(id) {
 		if(id=='') return false;
-		$.getJSON('?m=admin&c=category&a=public_tpl_file_list&style='+id+'&catid=<?php echo $parentid?>', function(data){$('#category_template').html(data.category_template);$('#list_template').html(data.list_template);$('#show_template').html(data.show_template);});
+		$.getJSON('?m=Admin&c=Category&a=publicTplFileList&style='+id+'&catid=<?php echo $parentid?>', function(data){$('#category_template').html(data.category_template);$('#list_template').html(data.list_template);$('#show_template').html(data.show_template);});
 	}
 	<?php if($modelid) echo "change_tpl($modelid)";?>
 //-->

@@ -1,10 +1,10 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_dialog = 1;
-include $this->admin_tpl('header','admin');
+include Admin::adminTpl('header','admin');
 ?>
 <div class="pad-lr-10">
-<form name="myform" id="myform" action="?m=admin&c=badword&a=delete" method="post" onsubmit="checkuid();return false;">
+<form name="myform" id="myform" action="?m=Admin&c=Badword&a=delete" method="post" onsubmit="checkuid();return false;">
 <div class="table-list">
  <table width="100%" cellspacing="0">
         <thead>
@@ -30,7 +30,7 @@ foreach($infos as $info){
         <td align="center"><?php echo $info['replaceword']?></td>
         <td align="center"><?php echo $level[$info['level']]?></td>
         <td align="center"><?php echo $info['lastusetime'] ? date('Y-m-d H:i', $info['lastusetime']):''?></td>
-         <td align="center"><a href="javascript:edit(<?php echo $info['badid']?>, '<?php echo new_addslashes($info['badword'])?>')"><?php echo L('edit')?></a> | <a href="javascript:confirmurl('?m=admin&c=badword&a=delete&badid=<?php echo $info['badid']?>', '<?php echo L('badword_confirm_del')?>')"><?php echo L('delete')?></a> </td>
+         <td align="center"><a href="javascript:edit(<?php echo $info['badid']?>, '<?php echo new_addslashes($info['badword'])?>')"><?php echo L('edit')?></a> | <a href="javascript:confirmurl('?m=Admin&c=Badword&a=delete&badid=<?php echo $info['badid']?>', '<?php echo L('badword_confirm_del')?>')"><?php echo L('delete')?></a> </td>
     </tr>
 <?php
 	}
@@ -51,7 +51,7 @@ foreach($infos as $info){
 <script type="text/javascript">
 function edit(id, name) {
 	window.top.art.dialog({id:'edit'}).close();
-	window.top.art.dialog({title:'<?php echo L('badword_edit')?> '+name+' ',id:'edit',iframe:'?m=admin&c=badword&a=edit&badid='+id,width:'450',height:'180'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
+	window.top.art.dialog({title:'<?php echo L('badword_edit')?> '+name+' ',id:'edit',iframe:'?m=Admin&c=Badword&a=edit&badid='+id,width:'450',height:'180'}, function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
 }
 
 function checkuid() {

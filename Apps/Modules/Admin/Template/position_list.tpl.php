@@ -1,7 +1,7 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
-<form name="myform" action="?m=admin&c=position&a=listorder" method="post">
+include Admin::adminTpl('header');?>
+<form name="myform" action="?m=Admin&c=Position&a=listorder" method="post">
 <div class="pad_10">
 <div class="table-list">
     <table width="100%" cellspacing="0">
@@ -29,12 +29,12 @@ if(is_array($infos)){
 	<td width="15%" align="center"><?php echo $info['catid'] ? $category[$info['catid']]['catname'] : L('posid_all')?></td>
 	<td width="15%" align="center"><?php echo $info['modelid'] ? $model[$info['modelid']]['name'] : L('posid_all')?></td>
 	<td width="20%" align="center">
-	<a href="?m=admin&c=position&a=public_item&posid=<?php echo $info['posid']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('posid_item_manage')?></a> |
+	<a href="?m=Admin&c=Position&a=publicItem&posid=<?php echo $info['posid']?>&menuid=<?php echo $_GET['menuid']?>"><?php echo L('posid_item_manage')?></a> |
 	<a href="javascript:edit(<?php echo $info['posid']?>, '<?php echo new_addslashes($info['name'])?>')"><?php echo L('edit')?></a> | 
 	<?php if($info['siteid']=='0' && $_SESSION['roleid'] != 1) {?>
 	<font color="#ccc"><?php echo L('delete')?></font>
 	<?php } else {?>
-	<a href="javascript:confirmurl('?m=admin&c=position&a=delete&posid=<?php echo $info['posid']?>', '<?php echo L('posid_del_cofirm')?>')"><?php echo L('delete')?></a>	
+	<a href="javascript:confirmurl('?m=Admin&c=Position&a=delete&posid=<?php echo $info['posid']?>', '<?php echo L('posid_del_cofirm')?>')"><?php echo L('delete')?></a>	
 	<?php } ?>
 	</td>
 	</tr>
@@ -58,7 +58,7 @@ if(is_array($infos)){
 <!--
 	window.top.$('#display_center_id').css('display','none');
 	function edit(id, name) {
-	window.top.art.dialog({title:'<?php echo L('edit')?>--'+name, id:'edit', iframe:'?m=admin&c=position&a=edit&posid='+id ,width:'500px',height:'360px'}, 	function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;
+	window.top.art.dialog({title:'<?php echo L('edit')?>--'+name, id:'edit', iframe:'?m=Admin&c=Position&a=edit&posid='+id ,width:'500px',height:'360px'}, 	function(){var d = window.top.art.dialog({id:'edit'}).data.iframe;
 	var form = d.document.getElementById('dosubmit');form.click();return false;}, function(){window.top.art.dialog({id:'edit'}).close()});
 }
 //-->

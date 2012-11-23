@@ -1,9 +1,9 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <div class="pad_10">
 <table cellpadding="2" cellspacing="1" class="table_form" width="100%">
-<form action="?m=admin&c=badword&a=import" method="post" name="myform">
+<form action="?m=Admin&c=Badword&a=import" method="post" name="myform">
  	<tr> 
       <th width="10%"> <?php echo L('badword_name')?> </th>
       <td width="200"><textarea name="info" cols="50" rows="6" require="true" datatype="limit" ></textarea> </td>
@@ -20,7 +20,7 @@ include $this->admin_tpl('header');?>
     <tr> 
       <th></th>
       <td> 
-	  <input type="hidden" name="forward" value="?m=admin&c=badword&a=import"> 
+	  <input type="hidden" name="forward" value="?m=Admin&c=Badword&a=import"> 
 	  <input type="submit" name="dosubmit" value=" <?php echo L('submit')?> " class="button"> 
       &nbsp; <input type="reset" name="reset" value=" <?php echo L('clear')?> " class="button">
 	  </td>

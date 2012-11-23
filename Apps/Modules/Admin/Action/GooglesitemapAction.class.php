@@ -1,7 +1,7 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
-pc_base::load_sys_class('form', '', 0);
+import('Admin','',0);
+vendor('Pc.Form');
 
 class GooglesitemapAction extends BaseAction {
 	function __construct() {
@@ -9,15 +9,15 @@ class GooglesitemapAction extends BaseAction {
 		$this->header = "<\x3Fxml version=\"1.0\" encoding=\"UTF-8\"\x3F>\n\t<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
 	    $this->charset = "UTF-8";
 	    $this->footer = "\t</urlset>\n";
-	    $this->baidunews_footer = "</document>";
+	    $this->baidunewsFooter = "</document>";
 		$this->items = array();
-		$this->baidunew_items = array();
+		$this->baidunewItems = array();
 		//生成栏目级别选项
-		$this->siteid = $this->get_siteid();
-		$this->categorys = getcache('category_content_'.$this->siteid,'commons');
+		$this->siteid = Admin::getSiteid();
+		$this->categorys = cache('category_content_'.$this->siteid,'Commons');
 	}
 	
-	function add_item2($new_item) {
+	function addItem2($new_item) {
         $this->items[] = $new_item;
     }
     
@@ -38,7 +38,7 @@ class GooglesitemapAction extends BaseAction {
         }
     }
   
-	function google_sitemap_item($loc, $lastmod = '', $changefreq = '', $priority = '') {
+	function googleSitemapItem($loc, $lastmod = '', $changefreq = '', $priority = '') {
 		$data = array();
 		$data['loc'] =  $loc;
 		$data['lastmod'] =  $lastmod;
@@ -60,7 +60,7 @@ class GooglesitemapAction extends BaseAction {
      * @param $source
      * @param $pubDate
      */
-	function baidunews_item($title, $link = '', $description = '',$text = '',$image = '', $keywords = '',$category = '',$author = '',$source='',$pubDate='') {
+	function baidunewsItem($title, $link = '', $description = '',$text = '',$image = '', $keywords = '',$category = '',$author = '',$source='',$pubDate='') {
 		$data = array();
 		$data['title'] =  $title;
 		$data['link'] =  $link;
@@ -75,11 +75,11 @@ class GooglesitemapAction extends BaseAction {
 		return $data;
     }
     
-    function add_baidunews_item($new_item){
-    	 $this->baidunew_items[] = $new_item;
+    function addBaidunewsItem($new_item){
+    	 $this->baidunewItems[] = $new_item;
     }
     
-	function baidunews_build( $file_name = null ,$this_domain,$email,$time) {
+	function baidunewsBuild( $file_name = null ,$this_domain,$email,$time) {
 		//百度头部
 			$this->baidunews = '';
 			$this->baidunews = "<?xml version=\"1.0\" encoding=\"".CHARSET."\" ?>\n";
@@ -87,7 +87,7 @@ class GooglesitemapAction extends BaseAction {
 			$this->baidunews .= "<webSite>".$this_domain."</webSite>\n";
 			$this->baidunews .= "<webMaster>".$email."</webMaster>\n";
 			$this->baidunews .= "<updatePeri>".$time."</updatePeri>\n";
-         	foreach ($this->baidunew_items AS $item){ 
+         	foreach ($this->baidunewItems AS $item){ 
 				$this->baidunews .= "<item>\n";
 				$this->baidunews .= "<title>".$item['title']."</title>\n";
 				$this->baidunews .= "<link>".$item['link']."</link>\n";
@@ -101,7 +101,7 @@ class GooglesitemapAction extends BaseAction {
 				$this->baidunews .= "<pubDate>".$item['pubDate']."</pubDate>\n";
 				$this->baidunews .= "</item>\n";
        	    } 
-         $this->baidunews .= $this->baidunews_footer . "\n";
+         $this->baidunews .= $this->baidunewsFooter . "\n";
          if (!is_null($file_name)){
             	return file_put_contents($file_name, $this->baidunews);
         	} else {
@@ -114,23 +114,22 @@ class GooglesitemapAction extends BaseAction {
 	 * Enter 生成google sitemap, 百度新闻协议
 	 */
 	function set () {
-		$hits_db = pc_base::load_model('hits_model');
+		$hits_db = M('Hits');
 		$dosubmit = isset($_POST['dosubmit']) ? $_POST['dosubmit'] : $_GET['dosubmit'];
 		
 		//读站点缓存
 		$siteid = $this->siteid;
-		$sitecache = getcache('sitelist','commons');
-		//根据当前站点,取得文件存放路径
-  		$systemconfig = pc_base::load_config('system');
- 		$html_root = substr($systemconfig['html_root'], 1);
+		$sitecache = cache('sitelist','Commons');
+		//根据当前站点,取得文件存放路径  		
+ 		$html_root = substr(C('html_root'), 1);
  		//判断当前站点目录,是PHPCMS则把文件写到根目录下, 不是则写到分站目录下.(分站目录用由静态文件路经html_root和分站目录dirname组成)
  		if($siteid==1){
- 			$dir = PHPCMS_PATH;
+ 			$dir = CMS_PATH;
  		}else {
- 			$dir = PHPCMS_PATH.$html_root.DIRECTORY_SEPARATOR.$sitecache[$siteid]['dirname'].DIRECTORY_SEPARATOR;
+ 			$dir = CMS_PATH.$html_root.'/'.$sitecache[$siteid]['dirname'].'/';
  		}
  		//模型缓存
- 		$modelcache = getcache('model','commons');
+ 		$modelcache = cache('model','Commons');
  		
  		//获取当前站点域名,下面生成URL时会用到.
  		$this_domain = substr($sitecache[$siteid]['domain'], 0,strlen($sitecache[$siteid]['domain'])-1);
@@ -141,13 +140,13 @@ class GooglesitemapAction extends BaseAction {
   					if($_POST['catids']=="")showmessage(L('choose_category'), HTTP_REFERER);
   					$catids = $_POST['catids'];
  					$catid_cache = $this->categorys;//栏目缓存
-					$this->content_db = pc_base::load_model('content_model');
+					$this->contentDb = D('Content');
  					foreach ($catids as $catid) {
  						$modelid = $catid_cache[$catid]['modelid'];//根据栏目ID查出modelid 进而确定表名,并结合栏目ID:catid 检索出对应栏目下的新闻条数
- 						$this->content_db->set_model($modelid);
- 						$result = $this->content_db->select(array('catid'=>$catid,'status'=>99), '*', $limit = "0,$baidunum", 'id desc');
+ 						$this->contentDb->setModel($modelid);
+ 						$result = $this->contentDb->where(array('catid'=>$catid,'status'=>99))->limit($limit = "0,$baidunum")->order('id desc')->select();
  						//重设表前缀,for循环时用来查,文章正文 
- 						$this->content_db->table_name = $this->content_db->table_name.'_data';
+ 						$this->contentDb->tableName = $this->contentDb->tableName.'_data';
  						foreach ($result as $arr){
  							//把每一条数据都装入数组中
  							extract($arr);
@@ -163,17 +162,17 @@ class GooglesitemapAction extends BaseAction {
 							$url = htmlspecialchars($url);
 							$description = htmlspecialchars(strip_tags($description));
 							//根据本条ID,从对应tablename_data取出正文内容
-   							$content_arr = $this->content_db->get_one(array('id'=>$id),'content');
+   							$content_arr = $this->contentDb->where(array('id'=>$id))->field('content')->find();
    							$content = htmlspecialchars(strip_tags($content_arr['content']));
    							//组合数据
-   	 						$smi = $this->baidunews_item($title,$url,$description,$content,$thumb, $keywords,$category,$author,$source,date('Y-m-d', $inputtime));//推荐文件
-							$this->add_baidunews_item($smi);
+   	 						$smi = $this->baidunewsItem($title,$url,$description,$content,$thumb, $keywords,$category,$author,$source,date('Y-m-d', $inputtime));//推荐文件
+							$this->addBaidunewsItem($smi);
   						} 
  					}
   					$baidunews_file = $dir.'baidunews.xml';
   					
    					@mkdir($dir,0777,true);
- 					$this->baidunews_build($baidunews_file,$this_domain,$_POST['email'],$_POST['time']); 
+ 					$this->baidunewsBuild($baidunews_file,$this_domain,$_POST['email'],$_POST['time']); 
  			    }
 			    
 				//生成网站地图
@@ -184,12 +183,12 @@ class GooglesitemapAction extends BaseAction {
 				$today = date('Y-m-d');
  			    $domain = $this_domain;
  			    //生成地图头部　－第一条
-				$smi = $this->google_sitemap_item($domain, $today, 'daily', '1.0');
-     			$this->add_item2($smi);
+				$smi = $this->googleSitemapItem($domain, $today, 'daily', '1.0');
+     			$this->addItem2($smi);
      			
-			    $this->content_db = pc_base::load_model('content_model');
+			    $this->contentDb = D('Content');
 			    //只提取该站点的模型.再循环取数据,生成站点地图.
-				$modelcache = getcache('model','commons');
+				$modelcache = cache('model','Commons');
  				$new_model = array();
 				foreach ($modelcache as $modelid => $mod){
 					if($mod['siteid']==$siteid){
@@ -198,18 +197,18 @@ class GooglesitemapAction extends BaseAction {
 					}
  				}
 				foreach($new_model as $modelid=>$m) {//每个模块取出num条数据 
-					$this->content_db->set_model($modelid);// 或者 $this->conetnt_db->set_model($modelid);
-					$result = $this->content_db->select(array('status'=>99), '*', $limit = "0,$num", $order = 'inputtime desc');
+					$this->contentDb->setModel($modelid);// 或者 $this->conetntDb->setModel($modelid);
+					$result = $this->contentDb->where(array('status'=>99))->limit($limit = "0,$num")->order($order = 'inputtime desc')->select();
 					foreach ($result as $arr){
 						if(substr($arr['url'],0,1)=='/'){
 							$url = htmlspecialchars(strip_tags($domain.$arr['url']));
 						}else {
 							$url = htmlspecialchars(strip_tags($arr['url']));
 						}
-						$hit_r = $hits_db->get_one(array('hitsid'=>'c-'.$modelid.'-'.$arr['id']));
+						$hit_r = $hits_db->where(array('hitsid'=>'c-'.$modelid.'-'.$arr['id']))->find();
 						if($hit_r['views']>1000) $content_priority = 0.9;
-						$smi    = $this->google_sitemap_item($url, $today, $content_changefreq, $content_priority);//推荐文件
-						$this->add_item2($smi);
+						$smi    = $this->googleSitemapItem($url, $today, $content_changefreq, $content_priority);//推荐文件
+						$this->addItem2($smi);
 					}
 				}
 				
@@ -218,7 +217,7 @@ class GooglesitemapAction extends BaseAction {
 					showmessage(L('create_success'), HTTP_REFERER);
 			     } 
 			} else { 
-				$tree = pc_base::load_sys_class('tree');
+				$tree = vendor('Pc.Tree','',1);
 				$tree->icon = array('&nbsp;&nbsp;&nbsp;│ ','&nbsp;&nbsp;&nbsp;├─ ','&nbsp;&nbsp;&nbsp;└─ ');
 				$tree->nbsp = '&nbsp;&nbsp;&nbsp;';
 				$categorys = array();
@@ -233,8 +232,8 @@ class GooglesitemapAction extends BaseAction {
 				}
 				$str  = "<option value='\$catid' \$selected \$disabled>\$spacer \$catname</option>";
 				$tree->init($categorys);
-				$string .= $tree->get_tree(0, $str);
- 				include $this->admin_tpl('googlesitemap');
+				$string .= $tree->getTree(0, $str);
+ 				include Admin::adminTpl('googlesitemap');
 			}
 	}
 	

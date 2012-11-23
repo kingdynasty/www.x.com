@@ -1,9 +1,9 @@
 <?php 
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header', 'admin');
+include Admin::adminTpl('header', 'admin');
 ?>
 <div class="pad-10">
-<form method="post" action="?m=announce&c=admin_announce&a=edit&aid=<?php echo $_GET['aid']?>" name="myform" id="myform">
+<form method="post" action="?m=Announce&c=AdminAnnounce&a=edit&aid=<?php echo $_GET['aid']?>" name="myform" id="myform">
 <table class="table_form" width="100%">
 <tbody>
 	<tr>
@@ -12,26 +12,26 @@ include $this->admin_tpl('header', 'admin');
 	</tr>
 	<tr>
 		<th><?php echo L('startdate')?>：</th>
-		<td><?php echo form::date('announce[starttime]', $an_info['starttime'], 1)?></td>
+		<td><?php echo Form::date('announce[starttime]', $an_info['starttime'], 1)?></td>
 	</tr>
 	<tr>
 		<th><?php echo L('enddate')?>：</th>
-		<td><?php $an_info['endtime'] = $an_info['endtime']=='0000-00-00' ? '' : $an_info['endtime']; echo form::date('announce[endtime]', $an_info['endtime'], 1);?></td>
+		<td><?php $an_info['endtime'] = $an_info['endtime']=='0000-00-00' ? '' : $an_info['endtime']; echo Form::date('announce[endtime]', $an_info['endtime'], 1);?></td>
 	</tr>
 	<tr>
 		<th><?php echo L('announce_content')?></th>
 		<td >
 		<textarea name="announce[content]" id="content"><?php echo $an_info['content']?></textarea>
-		<?php echo form::editor('content','basic');?>
+		<?php echo Form::editor('content','basic');?>
 		</td>
 	</tr>
 	<tr>
   		<th><strong><?php echo L('available_style')?>：</strong></th>
-        <td><?php echo form::select($template_list, $an_info['style'], 'name="announce[style]" id="style" onchange="load_file_list(this.value)"', L('please_select'))?></td>
+        <td><?php echo Form::select($template_list, $an_info['style'], 'name="announce[style]" id="style" onchange="load_file_list(this.value)"', L('please_select'))?></td>
 	</tr>
 	<tr>
 		<th><?php echo L('template_select')?>：</th>
-		<td  id="show_template"><?php if ($an_info['style']) echo '<script type="text/javascript">$.getJSON(\'?m=admin&c=category&a=public_tpl_file_list&style='.$an_info['style'].'&id='.$an_info['show_template'].'&module=announce&templates=show&name=announce&pc_hash=\'+pc_hash, function(data){$(\'#show_template\').html(data.show_template);});</script>'?></td>
+		<td  id="show_template"><?php if ($an_info['style']) echo '<script type="text/javascript">$.getJSON(\'?m=Admin&c=Category&a=publicTplFileList&style='.$an_info['style'].'&id='.$an_info['show_template'].'&module=announce&templates=show&name=announce&pc_hash=\'+pc_hash, function(data){$(\'#show_template\').html(data.show_template);});</script>'?></td>
 	</tr>
 	<tr>
 		<th><?php echo L('announce_status')?></th>
@@ -46,12 +46,12 @@ include $this->admin_tpl('header', 'admin');
 </html>
 <script type="text/javascript">
 function load_file_list(id) {
-	$.getJSON('?m=admin&c=category&a=public_tpl_file_list&style='+id+'&module=announce&templates=show&name=announce&pc_hash='+pc_hash, function(data){$('#show_template').html(data.show_template);});
+	$.getJSON('?m=Admin&c=Category&a=publicTplFileList&style='+id+'&module=announce&templates=show&name=announce&pc_hash='+pc_hash, function(data){$('#show_template').html(data.show_template);});
 }
 
 $(document).ready(function(){
 	$.formValidator.initConfig({formid:"myform",autotip:true,onerror:function(msg,obj){window.top.art.dialog({content:msg,lock:true,width:'220',height:'70'}, function(){this.close();$(obj).focus();})}});
-	$('#title').formValidator({onshow:"<?php echo L('input_announce_title')?>",onfocus:"<?php echo L('title_min_3_chars')?>",oncorrect:"<?php echo L('right')?>"}).inputValidator({min:1,onerror:"<?php echo L('title_cannot_empty')?>"}).ajaxValidator({type:"get",url:"",data:"m=announce&c=admin_announce&a=public_check_title&aid=<?php echo $_GET['aid']?>",datatype:"html",cached:false,async:'true',success : function(data) {
+	$('#title').formValidator({onshow:"<?php echo L('input_announce_title')?>",onfocus:"<?php echo L('title_min_3_chars')?>",oncorrect:"<?php echo L('right')?>"}).inputValidator({min:1,onerror:"<?php echo L('title_cannot_empty')?>"}).ajaxValidator({type:"get",url:"",data:"m=Announce&c=AdminAnnounce&a=publicCheckTitle&aid=<?php echo $_GET['aid']?>",datatype:"html",cached:false,async:'true',success : function(data) {
         if( data == "1" )
 		{
             return true;

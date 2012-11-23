@@ -1,7 +1,7 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_validator = true;
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript">
 <!--
 $(function(){
@@ -9,7 +9,7 @@ $(function(){
 	$("#username").formValidator({onshow:"<?php echo L('input').L('username')?>",onfocus:"<?php echo L('username').L('between_2_to_20')?>"}).inputValidator({min:2,max:20,onerror:"<?php echo L('username').L('between_2_to_20')?>"}).ajaxValidator({
 	    type : "get",
 		url : "",
-		data :"m=admin&c=admin_manage&a=public_checkname_ajx",
+		data :"m=Admin&c=AdminManage&a=publicChecknameAjx",
 		datatype : "html",
 		async:'false',
 		success : function(data){	
@@ -34,7 +34,7 @@ $(function(){
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=admin_manage&a=add" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=AdminManage&a=add" method="post" id="myform">
 <table width="100%" class="table_form contentWrap">
 <tr>
 <td width="80"><?php echo L('username')?></td> 

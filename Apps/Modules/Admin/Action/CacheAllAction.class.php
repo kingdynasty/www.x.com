@@ -1,6 +1,6 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 
 class CacheAllAction extends BaseAction {
 	private $cache_api;
@@ -41,30 +41,30 @@ class CacheAllAction extends BaseAction {
 				array('name' => L('clear_files'), 'function' => 'del_file'),
 				array('name' => L('video_category_tb'), 'function' => 'video_category_tb'),
 			);
-			$this->cache_api = pc_base::load_app_class('cache_api', 'admin');
+			$this->cacheApi = PcBase::loadAppClass('cache_api', 'admin');
 			$m = $modules[$page];
 			if ($m['mod'] && $m['function']) {
 				if ($m['file'] == '') $m['file'] = $m['function'];
-				$M = getcache('modules', 'commons');
+				$M = cache('modules', 'Commons');
 				if (in_array($m['mod'], array_keys($M))) {
-					$cache = pc_base::load_app_class($m['file'], $m['mod']);
+					$cache = PcBase::loadAppClass($m['file'], $m['mod']);
 					$cache->$m['function']();
 				}
 			} else if($m['target']=='iframe') {
 				echo '<script type="text/javascript">window.parent.frames["hidden"].location="index.php?'.$m['link'].'";</script>';
 			} else {
-				$this->cache_api->cache($m['function'], $m['param']);
+				$this->cacheApi->cache($m['function'], $m['param']);
 			}
 			$page++;
 			if (!empty($modules[$page])) {
 				echo '<script type="text/javascript">window.parent.addtext("<li>'.L('update').$m['name'].L('cache_file_success').'..........</li>");</script>';
-				showmessage(L('update').$m['name'].L('cache_file_success'), '?m=admin&c=cache_all&page='.$page.'&dosubmit=1&pc_hash='.$_SESSION['pc_hash'], 0);
+				showmessage(L('update').$m['name'].L('cache_file_success'), '?m=Admin&c=CacheAll&page='.$page.'&dosubmit=1&pc_hash='.$_SESSION['pc_hash'], 0);
 			} else {
 				echo '<script type="text/javascript">window.parent.addtext("<li>'.L('update').$m['name'].L('site_cache_success').'..........</li>")</script>';
 				showmessage(L('update').$m['name'].L('site_cache_success'), 'blank');
 			}
 		} else {
-			include $this->admin_tpl('cache_all');
+			include Admin::adminTpl('cache_all');
 		}
 	}
 }

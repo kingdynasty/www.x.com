@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript">
 <!--
 $(function(){
@@ -12,7 +12,7 @@ $(function(){
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=downservers&a=edit" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=Downservers&a=edit" method="post" id="myform">
 <input type="hidden" name="id" value="<?php echo $id?>"></input>
 <table width="100%" class="table_form">
 <tr>
@@ -25,7 +25,7 @@ $(function(){
 </tr> 
 <tr>
 <td><?php echo L('site_select')?></td>
-<td><?php echo form::select($sitelist,$siteid,'name="info[siteid]"',$default)?></td>
+<td><?php echo Form::select($sitelist,$siteid,'name="info[siteid]"',$default)?></td>
 </tr> 
 </table>
     <input name="dosubmit" type="submit" value="<?php echo L('submit')?>" class="dialog" id="dosubmit">

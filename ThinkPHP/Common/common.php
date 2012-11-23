@@ -66,17 +66,19 @@ function G($start,$end='',$dec=4) {
  * @param integer $step 步进值
  * @return mixed
  */
-function N($key, $step=0) {
+function N($key, $step=0,$save=false) {
     static $_num    = array();
     if (!isset($_num[$key])) {
-        $_num[$key] = 0;
+        $_num[$key] = (false !== $save)? S('N_'.$key) :  0;
     }
     if (empty($step))
         return $_num[$key];
     else
         $_num[$key] = $_num[$key] + (int) $step;
+    if(false !== $save){ // 保存结果
+        S('N_'.$key,$_num[$key],$save);
+    }
 }
-
 /**
  * 字符串命名风格转换
  * type 0 将Java风格转换为C的风格 1 将C风格转换为Java的风格
@@ -109,7 +111,18 @@ function require_cache($filename) {
     }
     return $_importFiles[$filename];
 }
-
+/**
+ * 批量导入文件 成功则返回
+ * @param array $array 文件数组
+ * @param boolean $return 加载成功后是否返回
+ * @return boolean
+ */
+function require_array($array,$return=false){
+    foreach ($array as $file){
+        if (require_cache($file) && $return) return true;
+    }
+    if($return) return false;
+}
 /**
  * 区分大小写的文件存在判断
  * @param string $filename 文件地址
@@ -125,6 +138,10 @@ function file_exists_case($filename) {
     }
     return false;
 }
+function obj_init($class){
+	$obj = new $class ();
+	return $obj;	
+}
 
 /**
  * 导入所需的类库 同java的Import 本函数有缓存功能
@@ -133,17 +150,25 @@ function file_exists_case($filename) {
  * @param string $ext 导入的文件扩展名
  * @return boolen
  */
-function import($class, $baseUrl = '', $ext='.class.php') {
-    static $_file = array();
-    $class = str_replace(array('.', '#'), array('/', '.'), $class);
+function import($class, $baseUrl = '',$initialize=1, $ext='.class.php') {
+    static $classes = array();
+    $class = str_replace(array('.', '#'), array('/', '.'), $class);//换成PHP命名空间格式
+    $key = md5 ( basename($class) . $baseUrl );//取得$class最终类名称，并MD5()
+    if (isset($classes[$key])) {
+    	if (!empty($classes[$key])) {
+    		return $classes[$key];
+    	} else {
+    		return true;
+    	}
+    }    
     if ('' === $baseUrl && false === strpos($class, '/')) {
         // 检查别名导入
-        return alias_import($class);
-    }
-    if (isset($_file[$class . $baseUrl]))
-        return true;
-    else
-        $_file[$class . $baseUrl] = true;
+        $alias = alias_import($class);        
+        if ($initialize && class_exists($class,false)) {
+        	$classes[$key] = obj_init($class);
+        	return $classes[$key];
+        }else return $alias;
+    }    
     $class_strut     = explode('/', $class);
     if (empty($baseUrl)) {
         if ('@' == $class_strut[0] || APP_NAME == $class_strut[0]) {
@@ -166,9 +191,13 @@ function import($class, $baseUrl = '', $ext='.class.php') {
     if (substr($baseUrl, -1) != '/')
         $baseUrl    .= '/';
     $classfile       = $baseUrl . $class . $ext;
-    if (!class_exists(basename($class),false)) {
-        // 如果类不存在 则导入类库文件
-        return require_cache($classfile);
+    if (!class_exists(basename($class),false)) {    	
+        // 如果类不存在 则导入类库文件 
+    	$require = require_cache($classfile);    	
+        if ($initialize && (false!=$require)) {
+        	$classes [$key] = obj_init(basename($class));
+        	return $classes [$key];
+        }return $require;
     }
 }
 
@@ -180,23 +209,18 @@ function import($class, $baseUrl = '', $ext='.class.php') {
  * @param string $ext 导入的文件扩展名
  * @return void
  */
-function load($name, $baseUrl='', $ext='.php') {
+function load($name,$ext='.php') {
     $name = str_replace(array('.', '#'), array('/', '.'), $name);
-    if (empty($baseUrl)) {
-        if (0 === strpos($name, '@/')) {
-            //加载当前项目函数库
-            $baseUrl    = COMMON_PATH;
-            $name       = substr($name, 2);
+    $name_strut = explode('/', $name);
+    if ('@' == $name_strut[0]) {
+            //加载项目函数库
+            $name =count($name_strut) == 2 ? MODULE_COMMON_PATH.$name_strut[1]:APP_PATH.'Modules/'.$name_strut[1].'/Common/'.$name_strut[2];
         } else {
-            //加载ThinkPHP 系统函数库
-            $baseUrl    = EXTEND_PATH . 'Function/';
-        }
-    }
-    if (substr($baseUrl, -1) != '/')
-        $baseUrl       .= '/';
-    require_cache($baseUrl . $name . $ext);
+            //加载ThinkPHP 项目公共函数库
+            $name = COMMON_PATH.$name_strut[0];
+    	}
+    require_cache($name . $ext);
 }
-
 /**
  * 快速导入第三方框架类库 所有第三方框架的类库文件统一放到 系统的Vendor目录下面
  * @param string $class 类库
@@ -204,10 +228,10 @@ function load($name, $baseUrl='', $ext='.php') {
  * @param string $ext 类库后缀 
  * @return boolean
  */
-function vendor($class, $baseUrl = '', $ext='.php') {
+function vendor($class, $baseUrl = '', $initialize=0,$ext='.class.php') {
     if (empty($baseUrl))
         $baseUrl = VENDOR_PATH;
-    return import($class, $baseUrl, $ext);
+    return import($class, $baseUrl, $initialize,$ext);
 }
 
 /**
@@ -217,20 +241,20 @@ function vendor($class, $baseUrl = '', $ext='.php') {
  * @return boolean
  */
 function alias_import($alias, $classfile='') {
-    static $_alias = array();
-    if (is_string($alias)) {
-        if(isset($_alias[$alias])) {
-            return require_cache($_alias[$alias]);
-        }elseif ('' !== $classfile) {
-            // 定义别名导入
-            $_alias[$alias] = $classfile;
-            return;
-        }
-    }elseif (is_array($alias)) {
-        $_alias   =  array_merge($_alias,$alias);
-        return;
-    }
-    return false;
+	static $_alias = array();
+	if (is_string($alias)) {
+		if(isset($_alias[$alias])) {
+			return require_cache($_alias[$alias]);
+		}elseif ('' !== $classfile) {
+			// 定义别名导入
+			$_alias[$alias] = $classfile;
+			return;
+		}
+	}elseif (is_array($alias)) {
+		$_alias   =  array_merge($_alias,$alias);
+		return;
+	}
+	return false;
 }
 
 /**
@@ -249,10 +273,9 @@ function D($name='',$layer='') {
         $name       =   C('default_app').'/'.$layer.'/'.$name;
     }
     if(isset($_model[$name]))   return $_model[$name];
-    import($name.$layer);
-    $class          =   basename($name.$layer);
-    if(class_exists($class)) {
-        $model      =   new $class();
+    $obj = import($name.$layer);
+    if(is_object($obj)) {
+        $model      =   $obj;
     }else {
         $model      =   new Model(basename($name));
     }
@@ -292,12 +315,10 @@ function A($name,$layer='') {
     $name_strut = explode('/', $name);
     $name = count($name_strut) == 2 ? '@/'.$name_strut[0].'/'.$layer.'/'.$name_strut[1] : '@/'.$layer.'/'.$name;//TODO 修改后的
     if(isset($_action[$name]))  return $_action[$name];
-    import($name.$layer);
-    $class      =   basename($name.$layer);
-    if(class_exists($class,false)) {
-        $action             = new $class();
-        $_action[$name]     =  $action;
-        return $action;
+    $obj = import($name.$layer);
+    if(is_object($obj)) {
+        $_action[$name]  =  $obj;
+        return $obj;
     }else {
         return false;
     }
@@ -331,23 +352,30 @@ function R($url,$vars=array(),$layer='') {
  * @param string $value 语言值
  * @return mixed
  */
-function L($name=null, $value=null) {
-    static $_lang = array();
+//$pars	转义的数组,二维数组 ,'key1'=>'value1','key2'=>'value2',
+function L($name = null, $pars = array(), $value = null) { //TODO 此处将$value与我自己定义的$pars换了位置
+    static $LANG = array ();
     // 空参数返回所有定义
-    if (empty($name))
-        return $_lang;
+    if (empty ( $name )) return $LANG;
     // 判断语言获取(或设置)
     // 若不存在,直接返回全大写$name
-    if (is_string($name)) {
-        $name = strtoupper($name);
-        if (is_null($value))
-            return isset($_lang[$name]) ? $_lang[$name] : $name;
-        $_lang[$name] = $value; // 语言定义
+    if (is_string ( $name )) {
+        $name = strtoupper ( $name );
+        if (is_null ( $value )) {
+            $language = isset ( $LANG [$name] ) ? $LANG [$name] : $name;
+            if ($pars) {
+                foreach ( $pars as $_k => $_v ) {
+                    $language = str_replace ( '{' . $_k . '}', $_v, $language );
+                }
+            }
+            return $language;
+        }
+        $LANG [$name] = $value; // 语言定义
         return;
     }
     // 批量定义
-    if (is_array($name))
-        $_lang = array_merge($_lang, array_change_key_case($name, CASE_UPPER));
+    if (is_array ( $name ))
+        $LANG = array_merge ( $LANG, array_change_key_case ( $name, CASE_UPPER ) );
     return;
 }
 
@@ -455,19 +483,6 @@ function add_tag_behavior($tag,$behavior,$path='') {
 }
 
 /**
- * 过滤器方法 引用传值
- * @param string $name 过滤器名称
- * @param string $content 要过滤的内容
- * @return void
- */
-function filter($name, &$content) {
-    $class      =   $name . 'Filter';
-    require_cache(LIB_PATH . 'Filter/' . $class . '.class.php');
-    $filter     =   new $class();
-    $content    =   $filter->run($content);
-}
-
-/**
  * 执行某个行为
  * @param string $name 行为名称
  * @param Mixed $params 传人的参数
@@ -475,33 +490,17 @@ function filter($name, &$content) {
  */
 function B($name, &$params=NULL) {
     $class      = $name.'Behavior';
-    G('behaviorStart');
+    if(APP_DEBUG) {
+        G('behaviorStart');
+    }
     $behavior   = new $class();
     $behavior->run($params);
     if(APP_DEBUG) { // 记录行为的执行日志
+        G('behaviorEnd');
         trace('Run '.$name.' Behavior [ RunTime:'.G('behaviorStart','behaviorEnd',6).'s ]','','INFO');
     }
 }
 
-/**
- * 渲染输出Widget
- * @param string $name Widget名称
- * @param array $data 传人的参数
- * @param boolean $return 是否返回内容 
- * @return void
- */
-function W($name, $data=array(), $return=false) {
-    $class      =   $name . 'Widget';
-    require_cache(LIB_PATH . 'Widget/' . $class . '.class.php');
-    if (!class_exists($class))
-        throw_exception(L('_CLASS_NOT_EXIST_') . ':' . $class);
-    $widget     =   Think::instance($class);
-    $content    =   $widget->render($data);
-    if ($return)
-        return $content;
-    else
-        echo $content;
-}
 
 /**
  * 去除代码中的空白和注释
@@ -590,6 +589,7 @@ function array_define($array,$check=true) {
  * @param string $value 变量
  * @param string $label 标签
  * @param string $level 日志级别 
+ * @param boolean $record 是否记录日志
  * @return void
  */
 function trace($value='[think]',$label='',$level='DEBUG',$record=false) {
@@ -598,14 +598,15 @@ function trace($value='[think]',$label='',$level='DEBUG',$record=false) {
         return $_trace;
     }else{
         $info   =   ($label?$label.':':'').print_r($value,true);
-        if(APP_DEBUG && 'ERR' == $level) {// 调试模式ERR抛出异常
+        if('ERR' == $level && C('TRACE_EXCEPTION')) {// 抛出异常
             throw_exception($info);
         }
+        $level  =   strtoupper($level);
         if(!isset($_trace[$level])) {
                 $_trace[$level] =   array();
             }
         $_trace[$level][]   = $info;
-        if((defined('IS_AJAX') && IS_AJAX) || !C('show_page_trace')  || $record) {
+        if((defined('IS_AJAX') && IS_AJAX) || !C('SHOW_PAGE_TRACE')  || $record) {
             Log::record($info,$level,$record);
         }
     }

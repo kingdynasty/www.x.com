@@ -1,6 +1,6 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
-include $this->admin_tpl('header');?>
+include Admin::adminTpl('header');?>
 <script type="text/javascript">
   $(document).ready(function() {
 	$.formValidator.initConfig({autotip:true,formid:"myform",onerror:function(msg){}});
@@ -9,7 +9,7 @@ include $this->admin_tpl('header');?>
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=linkage&a=public_sub_add" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=Linkage&a=publicSubAdd" method="post" id="myform">
 <table width="100%" class="table_form contentWrap">
 <tr>
 <td><?php echo L('level_menu')?></td>

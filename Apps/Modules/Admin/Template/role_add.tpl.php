@@ -1,7 +1,7 @@
 <?php
 defined('IN_ADMIN') or exit('No permission resources.');
 $show_validator = true;
-include $this->admin_tpl('header');
+include Admin::adminTpl('header');
 ?>
 
 <script type="text/javascript">
@@ -14,7 +14,7 @@ $(function(){
 </script>
 <div class="pad_10">
 <div class="common-form">
-<form name="myform" action="?m=admin&c=role&a=add" method="post" id="myform">
+<form name="myform" action="?m=Admin&c=Role&a=add" method="post" id="myform">
 <table width="100%" class="table_form contentWrap">
 <tr>
 <td><?php echo L('role_name')?></td> 

@@ -1,31 +1,31 @@
 <?php
 defined('APP_NAME') or exit('No permission resources.');
-import('@.Util.Admin');
+import('Admin','',0);
 
 class AdminAnnounceAction extends BaseAction {
 
 	private $db; public $username;
 	public function __construct() {
 		parent::__construct();
-		//if (!module_exists(ROUTE_M)) showmessage(L('module_not_exists'));
-		$this->username = param::get_cookie('admin_username');
-		$this->db = pc_base::load_model('announce_model');
+		//if (!module_exists(MODULE_NAME)) showmessage(L('module_not_exists'));
+		$this->username = cookie('admin_username');
+		$this->db = M('Announce');
 	}
 	
 	public function init() {
 		//公告列表
 		$sql = '';
 		$_GET['status'] = $_GET['status'] ? intval($_GET['status']) : 1;
-		$sql = '`siteid`=\''.$this->get_siteid().'\'';
+		$sql = '`siteid`=\''.Admin::getSiteid().'\'';
 		switch($_GET['s']) {
 			case '1': $sql .= ' AND `passed`=\'1\' AND (`endtime` >= \''.date('Y-m-d').'\' or `endtime`=\'0000-00-00\')'; break;
 			case '2': $sql .= ' AND `passed`=\'0\''; break;
 			case '3': $sql .= ' AND `passed`=\'1\' AND `endtime`!=\'0000-00-00\' AND `endtime` <\''.date('Y-m-d').'\' '; break;
 		}
 		$page = max(intval($_GET['page']), 1);
-		$data = $this->db->listinfo($sql, '`aid` DESC', $page);
-		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=announce&c=admin_announce&a=add\', title:\''.L('announce_add').'\', width:\'700\', height:\'500\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('announce_add'));
-		include $this->admin_tpl('announce_list');
+		$data = $this->db->where($sql)->order('`aid` DESC')->page($page)->select();
+		$big_menu = array('javascript:window.top.art.dialog({id:\'add\',iframe:\'?m=Announce&c=AdminAnnounce&a=add\', title:\''.L('announce_add').'\', width:\'700\', height:\'500\', lock:true}, function(){var d = window.top.art.dialog({id:\'add\'}).data.iframe;var form = d.document.getElementById(\'dosubmit\');form.click();return false;}, function(){window.top.art.dialog({id:\'add\'}).close()});void(0);', L('announce_add'));
+		include Admin::adminTpl('announce_list');
 	}
 	
 	/**
@@ -34,21 +34,21 @@ class AdminAnnounceAction extends BaseAction {
 	public function add() {
 		if(isset($_POST['dosubmit'])) {
 			$_POST['announce'] = $this->check($_POST['announce']);
-			if($this->db->insert($_POST['announce'])) showmessage(L('announcement_successful_added'), HTTP_REFERER, '', 'add');
+			if($this->db->data($_POST['announce'])->add()) showmessage(L('announcement_successful_added'), HTTP_REFERER, '', 'add');
 		} else {
 			//获取站点模板信息
-			pc_base::load_app_func('global', 'admin');
-			$siteid = $this->get_siteid();
+			load('@.Admin.function');
+			$siteid = Admin::getSiteid();
 			$template_list = template_list($siteid, 0);
-			$site = pc_base::load_app_class('sites','admin');
-			$info = $site->get_by_id($siteid);
+			$site = import('Sites');
+			$info = $site->getById($siteid);
 			foreach ($template_list as $k=>$v) {
 				$template_list[$v['dirname']] = $v['name'] ? $v['name'] : $v['dirname'];
 				unset($template_list[$k]);
 			}
 			$show_header = $show_validator = $show_scroll = 1;
-			pc_base::load_sys_class('form', '', 0);
-			include $this->admin_tpl('announce_add');
+			vendor('Pc.Form');
+			include Admin::adminTpl('announce_add');
 		}
 	}
 	
@@ -60,39 +60,39 @@ class AdminAnnounceAction extends BaseAction {
 		if(!$_GET['aid']) showmessage(L('illegal_operation'));
 		if(isset($_POST['dosubmit'])) {
 			$_POST['announce'] = $this->check($_POST['announce'], 'edit');
-			if($this->db->update($_POST['announce'], array('aid' => $_GET['aid']))) showmessage(L('announced_a'), HTTP_REFERER, '', 'edit');
+			if($this->db->data($_POST['announce'])->where(array('aid' => $_GET['aid']))->save()) showmessage(L('announced_a'), HTTP_REFERER, '', 'edit');
 		} else {
 			$where = array('aid' => $_GET['aid']);
-			$an_info = $this->db->get_one($where);
-			pc_base::load_sys_class('form', '', 0);
+			$an_info = $this->db->where($where)->find();
+			vendor('Pc.Form');
 			//获取站点模板信息
-			pc_base::load_app_func('global', 'admin');
+			load('@.Admin.function');
 			$template_list = template_list($this->siteid, 0);
 			foreach ($template_list as $k=>$v) {
 				$template_list[$v['dirname']] = $v['name'] ? $v['name'] : $v['dirname'];
 				unset($template_list[$k]);
 			}
 			$show_header = $show_validator = $show_scroll = 1;
-			include $this->admin_tpl('announce_edit');
+			include Admin::adminTpl('announce_edit');
 		}
 	}
 	
 	/**
 	 * ajax检测公告标题是否重复
 	 */
-	public function public_check_title() {
+	public function publicCheckTitle() {
 		if (!$_GET['title']) exit(0);
 		if (CHARSET=='gbk') {
 			$_GET['title'] = iconv('UTF-8', 'GBK', $_GET['title']);
 		}
 		$title = $_GET['title'];
 		if ($_GET['aid']) {
-			$r = $this->db->get_one(array('aid' => $_GET['aid']));
+			$r = $this->db->where(array('aid' => $_GET['aid']))->find();
 			if ($r['title'] == $title) {
 				exit('1');
 			}
-		} 
-		$r = $this->db->get_one(array('siteid' => $this->get_siteid(), 'title' => $title), 'aid');
+		}
+		$r = $this->db->where(array('siteid' => Admin::getSiteid(), 'title' => $title))->field('aid')->find();
 		if($r['aid']) {
 			exit('0');
 		} else {
@@ -103,7 +103,7 @@ class AdminAnnounceAction extends BaseAction {
 	/**
 	 * 批量修改公告状态 使其成为审核、未审核状态
 	 */
-	public function public_approval($aid = 0) {
+	public function publicApproval($aid = 0) {
 		if((!isset($_POST['aid']) || empty($_POST['aid'])) && !$aid) {
 			showmessage(L('illegal_operation'));
 		} else {
@@ -112,7 +112,7 @@ class AdminAnnounceAction extends BaseAction {
 				showmessage(L('announce_passed'), HTTP_REFERER);
 			} elseif($aid) {
 				$aid = intval($aid);
-				$this->db->update(array('passed' => $_GET['passed']), array('aid' => $aid));
+				$this->db->data(array('passed' => $_GET['passed']))->where(array('aid' => $aid))->save();
 				return true;
 			}
 		}
@@ -144,7 +144,7 @@ class AdminAnnounceAction extends BaseAction {
 	private function check($data = array(), $a = 'add') {
 		if($data['title']=='') showmessage(L('title_cannot_empty'));
 		if($data['content']=='') showmessage(L('announcements_cannot_be_empty'));
-		$r = $this->db->get_one(array('title' => $data['title']));
+		$r = $this->db->where(array('title' => $data['title']))->find();
 		if (strtotime($data['endtime'])<strtotime($data['starttime'])) {
 			$data['endtime'] = '';
 		}
@@ -152,8 +152,8 @@ class AdminAnnounceAction extends BaseAction {
 			if (is_array($r) && !empty($r)) {
 				showmessage(L('announce_exist'), HTTP_REFERER);
 			}
-			$data['siteid'] = $this->get_siteid();
-			$data['addtime'] = SYS_TIME;
+			$data['siteid'] = Admin::getSiteid();
+			$data['addtime'] = $GLOBALS['_beginTime'];
 			$data['username'] = $this->username;
 			if ($data['starttime'] == '') $announce['starttime'] = date('Y-m-d');
 		} else {

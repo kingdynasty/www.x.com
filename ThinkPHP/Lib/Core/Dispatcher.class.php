@@ -1,4 +1,5 @@
 <?php
+//TODO 此文件未更改
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
 // +----------------------------------------------------------------------
@@ -166,6 +167,17 @@ class Dispatcher {
     static private function getControler($var) {
         $controler = (!empty($_GET[$var])? $_GET[$var]:C('default_controler'));
         unset($_GET[$var]);
+        if($maps = C('URL_MODULE_MAP')) {
+            if(isset($maps[strtolower($module)])) {
+                // 记录当前别名
+                define('MODULE_ALIAS',strtolower($module));
+                // 获取实际的模块名
+                return   $maps[MODULE_ALIAS];
+            }elseif(array_search(strtolower($module),$maps)){
+                // 禁止访问原始模块
+                return   '';
+            }
+        }        
         if(C('url_case_insensitive')) {
             // URL地址不区分大小写
             // 智能识别方式 index.php/user_type/index/ 识别到 UserTypeAction 控制器
@@ -184,6 +196,20 @@ class Dispatcher {
             $_POST[$var] :
             (!empty($_GET[$var])?$_GET[$var]:C('default_action'));
         unset($_POST[$var],$_GET[$var]);
+        if($maps = C('URL_ACTION_MAP')) {
+            if(isset($maps[strtolower(MODULE_NAME)])) {
+                $maps =   $maps[strtolower(MODULE_NAME)];
+                if(isset($maps[strtolower($action)])) {
+                    // 记录当前别名
+                    define('ACTION_ALIAS',strtolower($action));
+                    // 获取实际的操作名
+                    return   $maps[ACTION_ALIAS];
+                }elseif(array_search(strtolower($action),$maps)){
+                    // 禁止访问原始操作
+                    return   '';
+                }
+            }
+        }        
         return strip_tags(C('url_case_insensitive')?strtolower($action):$action);
     }
 

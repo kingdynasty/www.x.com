@@ -3,17 +3,17 @@ defined('APP_NAME') or exit('No permission resources.');
 
 //定义在后台
 define('IN_ADMIN',true);
-class plugin_op {
+class PluginOp {
 	private $db,$db_var;
 	public function __construct(){
-		$this->db_var = pc_base::load_model('plugin_var_model');
-		$this->db = pc_base::load_model('plugin_var_model');
+		$this->dbVar = M('PluginVar');
+		$this->db = M('PluginVar');
 	}
 	/**
 	 * 插件后台模板加载
 	 */	
-	public function plugin_tpl($file,$identification) {
-		return PC_PATH.'plugin'.DIRECTORY_SEPARATOR.$identification.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'admin'.DIRECTORY_SEPARATOR.$file.'.tpl.php';
+	public function pluginTpl($file,$identification) {
+		return APP_PATH.'Plugin/'.$identification.'/Template/Admin/'.$file.'.tpl.php';
 	}
 	
 	/**
@@ -22,7 +22,7 @@ class plugin_op {
 	 */
 	public function getpluginvar($pluginid){
 		if(empty($pluginid)) return flase;
-		if($info_var = $this->db_var->select(array('pluginid'=>$pluginid))) {
+		if($info_var = $this->dbVar->where(array('pluginid'=>$pluginid))->select()) {
 			foreach ($info_var as $var) {
 				$pluginvar[$var['fieldname']] = $var['value'];
 			}
@@ -35,7 +35,7 @@ class plugin_op {
 	 * @param  $pluginid 插件id
 	 */
 	function getplugincfg($pluginid) {
-		$info = $this->db->get_one(array('pluginid'=>$pluginid));
+		$info = $this->db->where(array('pluginid'=>$pluginid))->find();
 		return $info;
 	}
 }
